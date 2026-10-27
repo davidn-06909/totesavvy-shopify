@@ -1,0 +1,135 @@
+.pib {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  width: 100%;
+  height: var(--pib-height-desktop);
+  overflow: hidden;
+  background: #d8d3cf;
+}
+
+.pib__media,
+.pib__overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.pib__media {
+  z-index: 0;
+  overflow: hidden;
+}
+
+.pib__parallax-image,
+.pib__movement,
+.pib__movement picture {
+  display: block;
+  width: 100%;
+}
+
+.pib__parallax-image {
+  height: 100%;
+}
+
+.pib__movement {
+  height: var(--height-parallax);
+}
+
+.pib__movement picture {
+  height: 100%;
+}
+
+.pib__image,
+.pib__placeholder,
+.pib__placeholder svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.pib__image {
+  object-fit: cover;
+  object-position: var(--pib-image-position-desktop);
+}
+
+.pib__placeholder {
+  color: #aaa39d;
+  background: #d8d3cf;
+}
+
+.pib__overlay {
+  z-index: 1;
+  background: var(--pib-overlay-color);
+  opacity: var(--pib-overlay-opacity);
+  pointer-events: none;
+}
+
+.pib__content {
+  position: relative;
+  z-index: 2;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: var(--pib-content-align-items);
+  gap: 30px;
+  width: min(calc(100% - 48px), var(--pib-content-max-width));
+  margin-inline: auto;
+  text-align: var(--pib-content-align);
+}
+
+.pib__title,
+.pib__subtitle {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-wrap: anywhere;
+}
+
+.pib__title {
+  color: var(--pib-title-color);
+  font-family: var(--font-heading-family);
+  font-size: var(--pib-title-size-desktop);
+  font-weight: var(--pib-title-weight);
+  line-height: 1.1;
+}
+
+.pib__subtitle {
+  color: var(--pib-subtitle-color);
+  font-family: var(--font-body-family);
+  font-size: var(--pib-subtitle-size-desktop);
+  font-weight: var(--pib-subtitle-weight);
+  line-height: 1.5;
+}
+
+@media (max-width: 767px) {
+  .pib {
+    height: var(--pib-height-mobile);
+  }
+
+  .pib__image {
+    object-position: var(--pib-image-position-mobile);
+  }
+
+  .pib__content {
+    gap: 24px;
+    width: min(calc(100% - 40px), var(--pib-content-max-width));
+  }
+
+  .pib__title {
+    font-size: var(--pib-title-size-mobile);
+  }
+
+  .pib__subtitle {
+    font-size: var(--pib-subtitle-size-mobile);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pib {
+    --height-parallax: 100% !important;
+  }
+
+  .pib__movement {
+    transform: none !important;
+    transition: none !important;
+  }
+}
