@@ -60,12 +60,6 @@
   assign heading_base_size = settings.heading_base_size | times: 0.0225
   assign heading_size = section.settings.heading_size | times: 0.01 | times: heading_base_size
   assign image_url_mobile = section.settings.image_mobile | default: section.settings.image_desktop
-  assign show_mobile_image = false
-  if section.settings.image_mobile != blank
-    if request.design_mode or section.settings.image_desktop == blank
-      assign show_mobile_image = true
-    endif
-  endif
   assign disable_quickview = true
   if section.settings.show_quickview
     assign disable_quickview = false
@@ -140,14 +134,12 @@
           height: 400px;
         {% endif %}
       }
-      {% if image_url_mobile != blank %}
-        .shop-the-look-image-{{ section.id }}::before {
-          content: '';
-          height: 0;
-          padding-bottom: {{ 1.0 | divided_by: image_url_mobile.aspect_ratio | times: 100 }}%;
-          display: block;
-        }
-      {% endif %}
+      .shop-the-look-image-{{ section.id }}::before {
+        content: '';
+        height: 0;
+        padding-bottom: {{ 1 | divided_by: image_url_mobile.aspect_ratio | times: 100 }}%;
+        display: block;
+      }
     }
   {% endif %}
   @media (min-width: 767px) {
@@ -167,14 +159,12 @@
           height: 750px;
         {% endif %}
       }
-      {% if section.settings.image_desktop != blank %}
-        .shop-the-look-image-{{ section.id }}::before {
-          content: '';
-          height: 0;
-          padding-bottom: {{ 1.0 | divided_by: section.settings.image_desktop.aspect_ratio | times: 100 }}%;
-          display: block;
-        }
-      {% endif %}
+      .shop-the-look-image-{{ section.id }}::before {
+        content: '';
+        height: 0;
+        padding-bottom: {{ 1 | divided_by: section.settings.image_desktop.aspect_ratio | times: 100 }}%;
+        display: block;
+      }
     {% endif %}
   }
   {%- if section.settings.show_rating -%}
@@ -240,7 +230,7 @@
               {{ image_url_mobile | image_url: width: 750 }} 750w,
               {{ image_url_mobile | image_url: width: 900 }} 900w" 
               media="(max-width: 767px)" 
-              sizes="{% unless section.settings.full_width_mobile %}calc(100vw - 2.5rem){% else %}100vw{% endunless %}"
+              size="{% unless section.settings.full_width_mobile %}calc(100vw - 2.5rem){% else %}100vw{% endunless %}"
             />
             <img
               class="image-{{ section.id }} animate_transition_slide__image h-full w-full absolute top-0 left-0 object-cover animate-Xpulse skeleton-image
@@ -276,7 +266,7 @@
             {%- render 'icon-placeholder', icon: 'icon-collection', class: 'w-full h-full' %}
           </div>
         {% endif %}
-        {%- if show_mobile_image -%}
+        {%- if section.settings.image_mobile != blank and request.design_mode or section.settings.image_desktop == blank -%}
           <img
             srcset="{{ section.settings.image_mobile | image_url: width: 375 }} 375w,
             {{ section.settings.image_mobile | image_url: width: 450 }} 450w,
@@ -365,11 +355,10 @@
             endif
           %}
           <button
-            type="button"
             index="{{ forloop.index }}" 
             class="opacity-0 absolute pt-5 pb-5 pl-5 pr-5 md:pt-6 md:pb-6 md:pl-6 md:pr-6 x-hotspot hotspot-{{ block.id }} text-[rgba(var(--colors-background))] hotspot-color-{{ section.id }} group{% if disabled_cursor %} cursor-not-allowed{% endif %}"
             {% if section.settings.image_alignment == 'layered' %} :class="active == {{ forloop.index }} && 'md:z-[70] z-40'" @mouseleave="active = false"{% endif %}
-            aria-label="{{ section.settings.heading | default: 'Shop the look' | escape }}: {{ forloop.index }}" {{ block.shopify_attributes }}
+            aria-label="hotspot" {{ block.shopify_attributes }}
             x-intersect.once="$el.classList.add('opacity-100')"
           >
             {% if section.settings.image_alignment == 'layered' %}
@@ -832,7 +821,6 @@
           "speed": 500,
           "gap": 64,
           "hotspot": "x-hotspot-{{ section.id }}",
-          "disableHoverOnTouch": true,
           {%- if is_rtl %}
             "direction": "rtl",
           {%- endif %}

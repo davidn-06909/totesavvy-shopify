@@ -107,9 +107,6 @@
       render 'app-review-css'
       render 'text-base-size-css'
     %}
-    {% if template.name == 'index' %}
-      {{ 'homepage-buttons.css' | asset_url | stylesheet_tag }}
-    {% endif %}
     {% if request.page_type == 'policy' %}
       {{ 'page.css' | asset_url | stylesheet_tag: preload: true }}
     {% endif %}
@@ -151,7 +148,7 @@
           </div>
         </div>
       {% endif %}
-      <main id="MainContent" class="content-for-layout focus-none outline-none grow theme-template-{{ template.name }} theme-template-suffix-{{ template.suffix | default: 'none' }}" role="main" tabindex="-1"{% if template.name == 'index' %} data-button-animation="{{ settings.buttons_animation | escape }}"{% endif %}>
+      <main id="MainContent" class="content-for-layout focus-none outline-none grow theme-template-{{ template.name }} theme-template-suffix-{{ template.suffix | default: 'none' }}" role="main" tabindex="-1">
         {{ content_for_layout }}
       </main>
       {% sections 'footer-group' %}
