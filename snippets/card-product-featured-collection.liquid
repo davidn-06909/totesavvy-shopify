@@ -1,0 +1,138 @@
+{%- liquid
+  assign selected_variant = product.selected_or_first_available_variant
+  assign product_url = product.url | within: collection
+  assign product_form_id = 'TsvFeaturedProductForm-' | append: section_id | append: '-' | append: product.id
+  assign featured_image = product.featured_media.preview_image | default: product.featured_image
+  assign brand_reference = product.metafields.custom.brand.value
+  assign brand_image = brand_reference.image.value
+
+  if brand_image == blank
+    assign brand_image = brand_reference.logo.value
+  endif
+  if brand_image == blank
+    assign brand_image = brand_reference.brand_image.value
+  endif
+  if brand_image == blank
+    assign brand_image = brand_reference.featured_image.value
+  endif
+  if brand_image == blank and brand_reference.preview_image != blank
+    assign brand_image = brand_reference
+  endif
+
+  assign brand_render_image = brand_image.preview_image | default: brand_image
+  assign loading = 'lazy'
+
+  if product_index == 1 and section.index <= 2
+    assign loading = 'eager'
+  endif
+
+  assign image_alt = featured_image.alt | default: product.title
+  assign brand_alt = brand_render_image.alt | default: brand_reference.name.value | default: product.vendor
+-%}
+
+<article class="tsv-featured-card splide__slide">
+  <a
+    class="tsv-featured-card__media"
+    href="{{ product_url }}"
+    aria-label="{{ product.title | escape }}"
+  >
+    {%- if featured_image != blank -%}
+      {{
+        featured_image
+        | image_url: width: 1000
+        | image_tag:
+          widths: '320, 480, 640, 800, 1000',
+          sizes: '(min-width: 768px) 23vw, 68vw',
+          loading: loading,
+          class: 'tsv-featured-card__image',
+          alt: image_alt
+      }}
+    {%- else -%}
+      {{ 'product-1' | placeholder_svg_tag: 'tsv-featured-card__placeholder' }}
+    {%- endif -%}
+
+    {%- unless product.available -%}
+      <span class="tsv-featured-card__badge">
+        {{- 'products.product.sold_out' | t -}}
+      </span>
+    {%- endunless -%}
+  </a>
+
+  <div class="tsv-featured-card__content">
+    <h3 class="tsv-featured-card__title">
+      <a href="{{ product_url }}">{{ product.title | escape }}</a>
+    </h3>
+
+    {%- if brand_render_image != blank and brand_render_image.width != blank -%}
+      <div class="tsv-featured-card__brand">
+        {{
+          brand_render_image
+          | image_url: width: 240
+          | image_tag:
+            widths: '80, 120, 180, 240',
+            sizes: '120px',
+            loading: 'lazy',
+            alt: brand_alt
+        }}
+      </div>
+    {%- endif -%}
+
+    <div class="tsv-featured-card__action-wrapper">
+      {%- if product.available and selected_variant != blank -%}
+        <div x-data="xProductCart">
+          {%- form
+            'product',
+            product,
+            id: product_form_id,
+            class: 'tsv-featured-card__form',
+            novalidate: 'novalidate',
+            data-type: 'add-to-cart-form',
+            x-ref: 'product_form'
+          -%}
+            <input type="hidden" name="id" value="{{ selected_variant.id }}">
+            <input type="hidden" name="quantity" value="1">
+            <button
+              class="tsv-featured-card__action"
+              type="submit"
+              name="add"
+              @click.prevent="
+                if (!loading && !errorMessage) {
+                  const openCartDrawer = () => {
+                    clearTimeout(removeCartDrawerListener);
+                    if ($store.xMiniCart) $store.xMiniCart.openCart();
+                  };
+                  const removeCartDrawerListener = setTimeout(() => {
+                    document.removeEventListener('romanics:cart:redirect', openCartDrawer);
+                  }, 15000);
+
+                  document.addEventListener('romanics:cart:redirect', openCartDrawer, { once: true });
+                  addToCart($event);
+                }
+              "
+              :disabled="loading || errorMessage"
+              aria-label="{{ 'products.product.add_to_cart' | t | escape }}"
+            >
+              <span x-show="!loading && !errorMessage">
+                {{- 'products.product.add_to_cart' | t -}}
+              </span>
+              <span class="tsv-featured-card__loading" x-show="loading" x-cloak>
+                {% render 'icon-alls', icon: 'icon-loading' %}
+              </span>
+              <span x-show="errorMessage" x-cloak role="alert">
+                {{- 'products.product.sold_out' | t -}}
+              </span>
+            </button>
+          {%- endform -%}
+        </div>
+      {%- else -%}
+        <button
+          class="tsv-featured-card__action tsv-featured-card__action--sold-out"
+          type="button"
+          disabled
+        >
+          {{- 'products.product.sold_out' | t -}}
+        </button>
+      {%- endif -%}
+    </div>
+  </div>
+</article>

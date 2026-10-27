@@ -1,0 +1,210 @@
+{%- liquid
+  assign collection_block = section.blocks.first
+  assign featured_collection = collection_block.settings.collection
+  assign columns_desktop = section.settings.columns_desktop | plus: 0
+  assign products_to_show = section.settings.rows_desktop | times: columns_desktop
+  assign product_count = featured_collection.products_count | at_most: products_to_show
+  assign heading_size = section.settings.heading_size | times: settings.heading_base_size | times: 0.000135
+  assign subtitle_size = settings.text_base_size | times: 0.007875
+  assign desktop_visible = columns_desktop | times: 10 | plus: 5 | divided_by: 10.0
+  assign progress_width = 100
+  assign mobile_card_width = '68%'
+
+  if product_count <= columns_desktop
+    assign desktop_visible = product_count | at_least: 1
+  endif
+
+  if product_count > 0
+    assign progress_width = 100.0 | divided_by: product_count
+  endif
+
+  if product_count <= 1
+    assign mobile_card_width = '100%'
+  endif
+
+  assign desktop_gap_count = desktop_visible | minus: 1
+  assign desktop_gap_width = desktop_gap_count | times: 5
+
+  if settings.lang_direction contains request.locale.iso_code
+    assign is_rtl = true
+  else
+    assign is_rtl = false
+  endif
+-%}
+
+<section
+  class="tsv-featured-collection section-padding-{{ section.id }}{% if is_rtl %} rtl{% endif %}"
+  style="
+    --tsv-featured-heading-size: {{ heading_size }}rem;
+    --tsv-featured-subtitle-size: {{ subtitle_size }}rem;
+    --tsv-featured-desktop-card-width: calc((100% - {{ desktop_gap_width }}px) / {{ desktop_visible }});
+    --tsv-featured-progress-width: {{ progress_width | at_most: 100 }}%;
+  "
+>
+  <div class="tsv-featured-collection__header">
+    {%- if section.settings.title != blank -%}
+      <{{ section.settings.heading_tag }} class="tsv-featured-collection__heading">
+        {{- section.settings.title | escape -}}
+      </{{ section.settings.heading_tag }}>
+    {%- endif -%}
+
+    {%- if section.settings.subheading != blank -%}
+      <p class="tsv-featured-collection__subtitle">
+        {{- section.settings.subheading | escape -}}
+      </p>
+    {%- elsif section.settings.text != blank -%}
+      <div class="tsv-featured-collection__subtitle rte">
+        {{- section.settings.text -}}
+      </div>
+    {%- endif -%}
+  </div>
+
+  <div class="tsv-featured-collection__products"{% if collection_block %} {{ collection_block.shopify_attributes }}{% endif %}>
+    {%- if product_count > 0 -%}
+      <div
+        id="TsvFeaturedCollection-{{ section.id }}"
+        class="tsv-featured-collection__slider x-splide splide visible"
+        x-data-slider="{{ section.id }}-totesavvy"
+        x-intersect.once.margin.200px='$store.xSplide.load($el, {
+          "speed": 700,
+          "pagination": false,
+          "arrows": true,
+          "mediaQuery": "min",
+          "drag": true,
+          "trimSpace": true,
+          "waitForTransition": false,
+          "updateOnMove": true,
+          "perMove": 1,
+          "fixedWidth": "{{ mobile_card_width }}",
+          "gap": "3px",
+          {%- if is_rtl %}
+            "direction": "rtl",
+          {%- endif %}
+          "breakpoints": {
+            768: {
+              "fixedWidth": "var(--tsv-featured-desktop-card-width)",
+              "gap": "5px"
+            }
+          },
+          "events": [
+            {
+              "event": "mounted move moved resized updated",
+              "callback": () => {
+                requestAnimationFrame(() => {
+                  if (!$el.splide) return;
+
+                  const media = $el.querySelector(".tsv-featured-card__media");
+                  if (media) {
+                    $el.style.setProperty("--tsv-featured-arrow-top", `${media.offsetHeight / 2}px`);
+                  }
+
+                  const progressBar = $el.querySelector("[data-tsv-progress-bar]");
+                  if (!progressBar) return;
+
+                  const progressTrack = progressBar.parentElement;
+                  const end = Math.max($el.splide.Components.Controller.getEnd(), 0);
+                  const index = Math.min(Math.max($el.splide.index, 0), end);
+                  const travel = Math.max(progressTrack.clientWidth - progressBar.offsetWidth, 0);
+                  const offset = end === 0 ? 0 : (index / end) * travel;
+                  const direction = document.documentElement.dir === "rtl" ? -1 : 1;
+
+                  progressBar.style.transitionDuration = "";
+                  progressBar.style.transform = `translateX(${offset * direction}px)`;
+                });
+              }
+            },
+            {
+              "event": "dragging",
+              "callback": () => {
+                requestAnimationFrame(() => {
+                  if (!$el.splide) return;
+
+                  const progressBar = $el.querySelector("[data-tsv-progress-bar]");
+                  if (!progressBar) return;
+
+                  const move = $el.splide.Components.Move;
+                  const start = move.getLimit(false);
+                  const finish = move.getLimit(true);
+                  const span = finish - start;
+                  const rate = span === 0 ? 0 : Math.min(Math.max((move.getPosition() - start) / span, 0), 1);
+                  const progressTrack = progressBar.parentElement;
+                  const travel = Math.max(progressTrack.clientWidth - progressBar.offsetWidth, 0);
+                  const direction = document.documentElement.dir === "rtl" ? -1 : 1;
+
+                  progressBar.style.transitionDuration = "0ms";
+                  progressBar.style.transform = `translateX(${rate * travel * direction}px)`;
+                });
+              }
+            },
+            {
+              "event": "dragged",
+              "callback": () => {
+                const progressBar = $el.querySelector("[data-tsv-progress-bar]");
+                if (progressBar) progressBar.style.transitionDuration = "";
+              }
+            }
+          ]
+        })'
+      >
+        {%- if product_count > columns_desktop -%}
+          <div class="tsv-featured-collection__arrows splide__arrows">
+            <button
+              class="tsv-featured-collection__arrow tsv-featured-collection__arrow--previous splide__arrow splide__arrow--prev"
+              type="button"
+              aria-label="Previous products"
+            >
+              {% render 'icon-labels-bags', icon: 'chevron-left' %}
+            </button>
+            <button
+              class="tsv-featured-collection__arrow tsv-featured-collection__arrow--next splide__arrow splide__arrow--next"
+              type="button"
+              aria-label="Next products"
+            >
+              {% render 'icon-labels-bags', icon: 'chevron-right' %}
+            </button>
+          </div>
+        {%- endif -%}
+
+        <div class="tsv-featured-collection__track splide__track">
+          <div class="tsv-featured-collection__list splide__list">
+            {%- for product in featured_collection.products limit: products_to_show -%}
+              {%- render 'card-product-featured-collection',
+                product: product,
+                collection: featured_collection,
+                section_id: section.id,
+                product_index: forloop.index
+              -%}
+            {%- endfor -%}
+          </div>
+        </div>
+
+        {%- if product_count > 1 -%}
+          <div class="tsv-featured-collection__progress" aria-hidden="true">
+            <span
+              class="tsv-featured-collection__progress-bar"
+              data-tsv-progress-bar
+            ></span>
+          </div>
+        {%- endif -%}
+      </div>
+    {%- else -%}
+      <div class="tsv-featured-collection__placeholder-grid">
+        {%- for placeholder_index in (1..columns_desktop) -%}
+          <article class="tsv-featured-card tsv-featured-card--placeholder">
+            <div class="tsv-featured-card__media">
+              {{ 'product-' | append: placeholder_index | placeholder_svg_tag: 'tsv-featured-card__placeholder' }}
+            </div>
+            <div class="tsv-featured-card__content">
+              <p class="tsv-featured-card__title">
+                {{ 'sections.featured_collection.product_title' | t }}
+              </p>
+              <button class="tsv-featured-card__action" type="button" disabled>
+                {{ 'products.product.add_to_cart' | t }}
+              </button>
+            </div>
+          </article>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+</section>
