@@ -1,0 +1,718 @@
+{%- if section.blocks.size > 0 -%}
+  {%- liquid
+    case section.settings.content_vertical_align
+      when 'top'
+        assign content_justify = 'flex-start'
+      when 'bottom'
+        assign content_justify = 'flex-end'
+      else
+        assign content_justify = 'center'
+    endcase
+
+    assign heading_tracking_mobile = section.settings.heading_tracking_mobile | divided_by: 100.0
+    assign heading_tracking_desktop = section.settings.heading_tracking_desktop | divided_by: 100.0
+    assign button_tracking = section.settings.button_tracking | divided_by: 100.0
+  -%}
+
+  <section
+    id="ImageTextTiles-{{ section.id }}"
+    class="w-full max-w-none pt-[var(--tiles-padding-top)] pb-[var(--tiles-padding-bottom)]"
+    style="
+      --tiles-cols: repeat({{ section.settings.desktop_columns }}, minmax(0, 1fr));
+      --tiles-column-gap: {{ section.settings.column_gap }}px;
+      --tiles-row-gap: {{ section.settings.mobile_row_gap }}px;
+      --tiles-padding-top: {{ section.settings.section_padding_top }}px;
+      --tiles-padding-bottom: {{ section.settings.section_padding_bottom }}px;
+      --tile-ratio: {{ section.settings.tile_aspect_ratio }};
+      --tile-content-justify: {{ content_justify }};
+      --tile-scrim-color: {{ section.settings.scrim_color }};
+      --tile-scrim-opacity: {{ section.settings.scrim_opacity }}%;
+      --tile-heading-size: {{ section.settings.heading_size_mobile }}px;
+      --tile-heading-size-md: {{ section.settings.heading_size_desktop }}px;
+      --tile-heading-lh: {{ section.settings.heading_line_height_mobile | divided_by: 100.0 }};
+      --tile-heading-lh-md: {{ section.settings.heading_line_height_desktop | divided_by: 100.0 }};
+      --tile-heading-ls: {{ heading_tracking_mobile }}em;
+      --tile-heading-ls-md: {{ heading_tracking_desktop }}em;
+      --tile-heading-color: {{ section.settings.heading_color }};
+      --tile-heading-transform: {% if section.settings.heading_uppercase %}uppercase{% else %}none{% endif %};
+      --tile-content-maxw: {{ section.settings.content_max_width_mobile }}%;
+      --tile-content-maxw-md: {{ section.settings.content_max_width_desktop }}%;
+      --tile-content-gap: {{ section.settings.content_gap_mobile }}px;
+      --tile-content-gap-md: {{ section.settings.content_gap_desktop }}px;
+      --tile-content-px: {{ section.settings.content_padding_inline_mobile }}px;
+      --tile-content-px-md: {{ section.settings.content_padding_inline_desktop }}px;
+      --tile-btn-bg: {{ section.settings.button_bg }};
+      --tile-btn-text: {{ section.settings.button_text_color }};
+      --tile-btn-hover-bg: {{ section.settings.button_hover_bg }};
+      --tile-btn-hover-text: {{ section.settings.button_hover_text_color }};
+      --tile-btn-minw: {{ section.settings.button_min_width }}px;
+      --tile-btn-h: {{ section.settings.button_height }}px;
+      --tile-btn-px: {{ section.settings.button_padding_inline }}px;
+      --tile-btn-radius: {{ section.settings.button_radius }}px;
+      --tile-btn-font-size: {{ section.settings.button_font_size_mobile }}px;
+      --tile-btn-font-size-md: {{ section.settings.button_font_size_desktop }}px;
+      --tile-btn-weight: {{ section.settings.button_font_weight }};
+      --tile-btn-ls: {{ button_tracking }}em;
+      --tile-anim: {{ section.settings.anim_duration }}ms;
+    "
+  >
+    <div
+      id="ImageTextTilesGrid-{{ section.id }}"
+      class="grid w-full grid-cols-1 items-stretch gap-x-0 gap-y-[var(--tiles-row-gap)] md:grid-cols-[var(--tiles-cols)] md:gap-x-[var(--tiles-column-gap)] md:gap-y-0"
+    >
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'tile' -%}
+          {%- liquid
+            assign tile_tag = 'div'
+            assign has_link = false
+            if block.settings.link != blank
+              assign tile_tag = 'a'
+              assign has_link = true
+            endif
+
+            case block.settings.image_position
+              when 'top'
+                assign image_position_class = 'object-top'
+              when 'bottom'
+                assign image_position_class = 'object-bottom'
+              when 'left'
+                assign image_position_class = 'object-left'
+              when 'right'
+                assign image_position_class = 'object-right'
+              else
+                assign image_position_class = 'object-center'
+            endcase
+
+            capture tile_style
+              if block.settings.use_custom_scrim
+                echo '--tile-scrim-color: '
+                echo block.settings.block_scrim_color
+                echo '; --tile-scrim-opacity: '
+                echo block.settings.block_scrim_opacity
+                echo '%;'
+              endif
+
+              if section.settings.tile_aspect_ratio == 'auto'
+                echo '--tile-ratio: '
+                if block.settings.image != blank
+                  echo block.settings.image.aspect_ratio
+                else
+                  echo '1 / 1'
+                endif
+                echo ';'
+              endif
+            endcapture
+
+            assign image_alt = block.settings.image.alt | default: block.settings.heading
+          -%}
+
+          <{{ tile_tag }}
+            id="ImageTextTile-{{ block.id }}-{{ section.id }}"
+            class="relative z-0 isolate flex w-full flex-col items-center [justify-content:var(--tile-content-justify)] overflow-hidden aspect-[var(--tile-ratio)]{% if has_link %} group cursor-pointer no-underline focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2 focus-visible:shadow-[0_0_0_4px_rgba(0,0,0,0.45)]{% else %} cursor-default{% endif %}"
+            {% if has_link %}
+              href="{{ block.settings.link }}"
+            {% endif %}
+            {% if tile_style != blank %}
+              style="{{ tile_style | strip }}"
+            {% endif %}
+            {{ block.shopify_attributes }}
+          >
+            {%- if block.settings.image != blank -%}
+              <img
+                class="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover {{ image_position_class }}"
+                src="{{ block.settings.image | image_url: width: 1200 }}"
+                srcset="
+                  {{ block.settings.image | image_url: width: 320 }} 320w,
+                  {{ block.settings.image | image_url: width: 430 }} 430w,
+                  {{ block.settings.image | image_url: width: 640 }} 640w,
+                  {{ block.settings.image | image_url: width: 860 }} 860w,
+                  {{ block.settings.image | image_url: width: 1080 }} 1080w,
+                  {{ block.settings.image | image_url: width: 1200 }} 1200w,
+                  {{ block.settings.image | image_url: width: 1600 }} 1600w,
+                  {{ block.settings.image | image_url: width: 2000 }} 2000w
+                "
+                sizes="(min-width: 768px) calc(100vw / {{ section.settings.desktop_columns }}), 100vw"
+                alt="{{ image_alt | escape }}"
+                width="{{ block.settings.image.width }}"
+                height="{{ block.settings.image.height }}"
+                decoding="async"
+                {% if forloop.first %}
+                  loading="eager"
+                  fetchpriority="high"
+                {% else %}
+                  loading="lazy"
+                {% endif %}
+              >
+            {%- else -%}
+              <div
+                class="pointer-events-none absolute inset-0 z-0 bg-[color:var(--tile-scrim-color)]"
+                aria-hidden="true"
+              ></div>
+            {%- endif -%}
+
+            <div
+              class="pointer-events-none absolute inset-0 z-10{% if section.settings.scrim_style == 'bottom_gradient' %} bg-[linear-gradient(to_top,color-mix(in_srgb,var(--tile-scrim-color)_clamp(0%,calc(var(--tile-scrim-opacity)+15%),100%),transparent)_0%,color-mix(in_srgb,var(--tile-scrim-color)_calc(var(--tile-scrim-opacity)/2),transparent)_55%,color-mix(in_srgb,var(--tile-scrim-color)_calc(var(--tile-scrim-opacity)/2),transparent)_100%)]{% else %} bg-[color:color-mix(in_srgb,var(--tile-scrim-color)_var(--tile-scrim-opacity),transparent)]{% endif %}"
+              aria-hidden="true"
+            ></div>
+
+            {%- if block.settings.heading != blank or block.settings.button_label != blank -%}
+              <div
+                class="relative z-20 flex w-full max-w-[var(--tile-content-maxw)] flex-col items-center justify-center gap-[var(--tile-content-gap)] px-[var(--tile-content-px)] md:max-w-[var(--tile-content-maxw-md)] md:gap-[var(--tile-content-gap-md)] md:px-[var(--tile-content-px-md)]"
+              >
+                {%- if block.settings.heading != blank -%}
+                  <h2
+                    class="m-0 w-full p-0 text-center [font-family:var(--font-heading-family)] text-[length:var(--tile-heading-size)] font-normal leading-[var(--tile-heading-lh)] tracking-[var(--tile-heading-ls)] text-[color:var(--tile-heading-color)] [text-transform:var(--tile-heading-transform)] [overflow-wrap:anywhere] md:text-[length:var(--tile-heading-size-md)] md:leading-[var(--tile-heading-lh-md)] md:tracking-[var(--tile-heading-ls-md)]"
+                  >
+                    {{ block.settings.heading | escape }}
+                  </h2>
+                {%- endif -%}
+
+                {%- if block.settings.button_label != blank -%}
+                  <span
+                    class="relative z-0 isolate inline-flex min-h-[var(--tile-btn-h)] min-w-[var(--tile-btn-minw)] max-w-full items-center justify-center overflow-hidden rounded-[var(--tile-btn-radius)] bg-[color:var(--tile-btn-bg)] px-[var(--tile-btn-px)] transition-transform duration-120 ease-[cubic-bezier(0.4,0,0.2,1)] before:pointer-events-none before:absolute before:inset-0 before:z-0 before:origin-left before:scale-x-0 before:bg-[color:var(--tile-btn-hover-bg)] before:content-[''] before:transition-transform before:duration-[var(--tile-anim)] before:ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:before:scale-x-100 group-focus-visible:before:scale-x-100 group-active:scale-[0.98] motion-reduce:duration-0 motion-reduce:before:duration-0"
+                  >
+                    <span
+                      class="relative z-10 max-w-full break-words text-center [font-family:var(--font-button,var(--font-body-family))] text-[length:var(--tile-btn-font-size)] [font-weight:var(--tile-btn-weight)] leading-none tracking-[var(--tile-btn-ls)] text-[color:var(--tile-btn-text)] uppercase transition-colors duration-[var(--tile-anim)] ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:text-[color:var(--tile-btn-hover-text)] group-focus-visible:text-[color:var(--tile-btn-hover-text)] motion-reduce:duration-0 md:text-[length:var(--tile-btn-font-size-md)]"
+                    >
+                      {{ block.settings.button_label | escape }}
+                    </span>
+                  </span>
+                {%- endif -%}
+              </div>
+            {%- endif -%}
+          </{{ tile_tag }}>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Image and text tiles",
+  "tag": "section",
+  "class": "section section-image-text-tiles x-section",
+  "max_blocks": 6,
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer",
+      "aside"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "desktop_columns",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "label": "Desktop columns",
+      "info": "Set this to 1 when using a single block at full width.",
+      "default": 2
+    },
+    {
+      "type": "range",
+      "id": "column_gap",
+      "min": 0,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "label": "Desktop column gap",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "mobile_row_gap",
+      "min": 0,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "label": "Mobile row gap",
+      "default": 10
+    },
+    {
+      "type": "select",
+      "id": "tile_aspect_ratio",
+      "label": "Tile aspect ratio",
+      "info": "Auto uses each image's natural aspect ratio, so tiles in the same row can have different natural heights.",
+      "options": [
+        {
+          "value": "1 / 1",
+          "label": "Square (1:1)"
+        },
+        {
+          "value": "4 / 5",
+          "label": "Portrait (4:5)"
+        },
+        {
+          "value": "3 / 4",
+          "label": "Portrait (3:4)"
+        },
+        {
+          "value": "16 / 9",
+          "label": "Landscape (16:9)"
+        },
+        {
+          "value": "auto",
+          "label": "Natural image ratio"
+        }
+      ],
+      "default": "1 / 1"
+    },
+    {
+      "type": "select",
+      "id": "content_vertical_align",
+      "label": "Content vertical alignment",
+      "options": [
+        {
+          "value": "top",
+          "label": "Top"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "bottom",
+          "label": "Bottom"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "Scrim"
+    },
+    {
+      "type": "color",
+      "id": "scrim_color",
+      "label": "Scrim color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "scrim_opacity",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "unit": "%",
+      "label": "Scrim opacity",
+      "info": "Raise the opacity when the heading is difficult to read over a light image.",
+      "default": 20
+    },
+    {
+      "type": "select",
+      "id": "scrim_style",
+      "label": "Scrim style",
+      "options": [
+        {
+          "value": "flat",
+          "label": "Flat"
+        },
+        {
+          "value": "bottom_gradient",
+          "label": "Bottom gradient"
+        }
+      ],
+      "default": "flat"
+    },
+    {
+      "type": "header",
+      "content": "Heading"
+    },
+    {
+      "type": "range",
+      "id": "heading_size_desktop",
+      "min": 16,
+      "max": 72,
+      "step": 1,
+      "unit": "px",
+      "label": "Desktop heading size",
+      "default": 34
+    },
+    {
+      "type": "range",
+      "id": "heading_size_mobile",
+      "min": 12,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "label": "Mobile heading size",
+      "default": 17
+    },
+    {
+      "type": "range",
+      "id": "heading_line_height_desktop",
+      "min": 90,
+      "max": 200,
+      "step": 5,
+      "unit": "%",
+      "label": "Desktop heading line height",
+      "default": 120
+    },
+    {
+      "type": "range",
+      "id": "heading_line_height_mobile",
+      "min": 90,
+      "max": 200,
+      "step": 5,
+      "unit": "%",
+      "label": "Mobile heading line height",
+      "default": 135
+    },
+    {
+      "type": "range",
+      "id": "heading_tracking_desktop",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "%",
+      "label": "Desktop heading letter spacing",
+      "default": 2
+    },
+    {
+      "type": "range",
+      "id": "heading_tracking_mobile",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "%",
+      "label": "Mobile heading letter spacing",
+      "default": 6
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "checkbox",
+      "id": "heading_uppercase",
+      "label": "Uppercase headings",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "content_max_width_desktop",
+      "min": 40,
+      "max": 100,
+      "step": 2,
+      "unit": "%",
+      "label": "Desktop content width",
+      "default": 78
+    },
+    {
+      "type": "range",
+      "id": "content_max_width_mobile",
+      "min": 40,
+      "max": 100,
+      "step": 2,
+      "unit": "%",
+      "label": "Mobile content width",
+      "default": 86
+    },
+    {
+      "type": "range",
+      "id": "content_gap_desktop",
+      "min": 0,
+      "max": 64,
+      "step": 2,
+      "unit": "px",
+      "label": "Desktop heading to button gap",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "content_gap_mobile",
+      "min": 0,
+      "max": 64,
+      "step": 2,
+      "unit": "px",
+      "label": "Mobile heading to button gap",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "content_padding_inline_desktop",
+      "min": 0,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "label": "Desktop content side padding",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "content_padding_inline_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "label": "Mobile content side padding",
+      "default": 20
+    },
+    {
+      "type": "header",
+      "content": "Button"
+    },
+    {
+      "type": "color",
+      "id": "button_bg",
+      "label": "Background",
+      "default": "#D6C3B2"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Text",
+      "default": "#3F3630"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_bg",
+      "label": "Hover background",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_text_color",
+      "label": "Hover text",
+      "default": "#3F3630"
+    },
+    {
+      "type": "range",
+      "id": "button_min_width",
+      "min": 100,
+      "max": 320,
+      "step": 4,
+      "unit": "px",
+      "label": "Minimum width",
+      "default": 140
+    },
+    {
+      "type": "range",
+      "id": "button_height",
+      "min": 28,
+      "max": 64,
+      "step": 1,
+      "unit": "px",
+      "label": "Minimum height",
+      "default": 34
+    },
+    {
+      "type": "range",
+      "id": "button_padding_inline",
+      "min": 8,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "label": "Side padding",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "button_radius",
+      "min": 0,
+      "max": 32,
+      "step": 1,
+      "unit": "px",
+      "label": "Corner radius",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "button_font_size_desktop",
+      "min": 8,
+      "max": 20,
+      "step": 0.5,
+      "unit": "px",
+      "label": "Desktop font size",
+      "default": 11
+    },
+    {
+      "type": "range",
+      "id": "button_font_size_mobile",
+      "min": 8,
+      "max": 20,
+      "step": 0.5,
+      "unit": "px",
+      "label": "Mobile font size",
+      "default": 10.5
+    },
+    {
+      "type": "select",
+      "id": "button_font_weight",
+      "label": "Font weight",
+      "options": [
+        {
+          "value": "400",
+          "label": "Regular"
+        },
+        {
+          "value": "500",
+          "label": "Medium"
+        },
+        {
+          "value": "600",
+          "label": "Semibold"
+        },
+        {
+          "value": "700",
+          "label": "Bold"
+        }
+      ],
+      "default": "500"
+    },
+    {
+      "type": "range",
+      "id": "button_tracking",
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "unit": "%",
+      "label": "Letter spacing",
+      "default": 14
+    },
+    {
+      "type": "header",
+      "content": "Motion"
+    },
+    {
+      "type": "range",
+      "id": "anim_duration",
+      "min": 0,
+      "max": 800,
+      "step": 20,
+      "unit": "ms",
+      "label": "Fill sweep duration",
+      "default": 320
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "section_padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "section_padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 0
+    }
+  ],
+  "blocks": [
+    {
+      "type": "tile",
+      "name": "Tile",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "select",
+          "id": "image_position",
+          "label": "Image position",
+          "options": [
+            {
+              "value": "top",
+              "label": "Top"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "bottom",
+              "label": "Bottom"
+            },
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ],
+          "default": "center"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "EVERYDAY ORGANIZATION"
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "Button label",
+          "default": "SHOP NOW"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        },
+        {
+          "type": "checkbox",
+          "id": "use_custom_scrim",
+          "label": "Use a custom scrim",
+          "default": false
+        },
+        {
+          "type": "color",
+          "id": "block_scrim_color",
+          "label": "Custom scrim color",
+          "default": "#000000"
+        },
+        {
+          "type": "range",
+          "id": "block_scrim_opacity",
+          "min": 0,
+          "max": 80,
+          "step": 5,
+          "unit": "%",
+          "label": "Custom scrim opacity",
+          "default": 20
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image and text tiles",
+      "blocks": [
+        {
+          "type": "tile"
+        },
+        {
+          "type": "tile",
+          "settings": {
+            "heading": "NOT YOUR AVERAGE BABY BAG"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
