@@ -1,0 +1,27 @@
+{% comment %}
+  Renders the two-column tree panel for a top-level menu link.
+
+  Accepts:
+  - link: top-level Shopify link
+  - top_index: zero-based top-level index
+  - default_child_index: first child that owns grandchildren, or -1
+  - section: owning header section
+{% endcomment %}
+
+<div
+  id="tsh-mega-{{ section.id }}-{{ top_index }}"
+  class="tsh-mega"
+  :class="$store.xHeaderMenu.tshOpenMega === {{ top_index }} && 'is-open'"
+  :aria-hidden="($store.xHeaderMenu.tshOpenMega !== {{ top_index }}).toString()"
+  :inert="$store.xHeaderMenu.tshOpenMega !== {{ top_index }}"
+  @mouseenter="$store.xHeaderMenu.cancelTransparentMegaClose()"
+  @mouseleave="$store.xHeaderMenu.queueTransparentMegaClose({{ section.settings.mega_hover_close_delay }})"
+>
+  {% render 'nav-tree',
+    variant: 'mega',
+    link: link,
+    top_index: top_index,
+    section: section,
+    section_id: section.id
+  %}
+</div>
