@@ -1,0 +1,50 @@
+{%- liquid
+  assign is_duplicate = is_duplicate | default: false
+  assign verified_label = block.settings.verified_label | default: 'Verified'
+  assign show_verified = false
+  assign has_metadata = false
+
+  if block.settings.is_verified and verified_label != blank
+    assign show_verified = true
+  endif
+
+  if block.settings.author != blank or show_verified or block.settings.review_date != blank
+    assign has_metadata = true
+  endif
+-%}
+
+<li
+  class="tsv-testimonials__item{% if is_duplicate %} tsv-testimonials__item--duplicate{% endif %}"
+  {% if is_duplicate %}
+    aria-hidden="true"
+  {% else %}
+    id="Testimonial-{{ section.id }}-{{ block.id }}"
+    {{ block.shopify_attributes }}
+  {% endif %}
+>
+  <article class="tsv-testimonials__card">
+    {%- if block.settings.title != blank -%}
+      <h3 class="tsv-testimonials__review-title">{{ block.settings.title | escape }}</h3>
+    {%- endif -%}
+
+    {%- if block.settings.text != blank -%}
+      <div class="tsv-testimonials__review-text rte">
+        {{- block.settings.text -}}
+      </div>
+    {%- endif -%}
+
+    {%- if has_metadata -%}
+      <footer class="tsv-testimonials__metadata">
+        {%- if block.settings.author != blank -%}
+          <span class="tsv-testimonials__author">{{ block.settings.author | escape }}</span>
+        {%- endif -%}
+        {%- if show_verified -%}
+          <span class="tsv-testimonials__verified">{{ verified_label | escape }}</span>
+        {%- endif -%}
+        {%- if block.settings.review_date != blank -%}
+          <span class="tsv-testimonials__date">{{ block.settings.review_date | escape }}</span>
+        {%- endif -%}
+      </footer>
+    {%- endif -%}
+  </article>
+</li>
