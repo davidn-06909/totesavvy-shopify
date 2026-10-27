@@ -50,11 +50,12 @@
 {%- form 'localization', class: direction -%}
   {% capture list_transition %}
     {% if enable_footer %} 
-      x-transition:enter="transition-all ease-in-out duration-500"
-      x-transition:enter-start="opacity-0 transform translate-y-4"
-      x-transition:enter-end="opacity-100 transform translate-y-0"
-      x-transition:leave="transition-all ease-in-out duration-500"
-      x-transition:leave-end="opacity-0 transform translate-y-4"
+      x-transition:enter="transition-opacity ease-out duration-[160ms]"
+      x-transition:enter-start="opacity-0 translate-y-1"
+      x-transition:enter-end="opacity-100 translate-y-0"
+      x-transition:leave="transition-opacity ease-in duration-[120ms]"
+      x-transition:leave-start="opacity-100 translate-y-0"
+      x-transition:leave-end="opacity-0 translate-y-1"
     {% else %}
       x-transition:enter="transition-all ease-in-out duration-500"
       x-transition:enter-start="opacity-0 transform -translate-y-4"
@@ -122,13 +123,16 @@
   {%- if currency_selector -%}
     <div 
       x-data="xLocalizationForm" 
-      class="localization-form-child country-selector max-w-max text-normal relative inline-flex lg:inline-block{% if enable_footer %} justify-center{% endif %}"
-      @keyup.escape="openCountry = false"
+      class="localization-form-child country-selector currency-disclosure max-w-max text-normal relative inline-flex lg:inline-block{% if enable_footer %} justify-center{% endif %}"
+      @keyup.escape.stop="if (openCountry) { openCountry = false; $refs.countryTrigger.focus(); }"
+      x-effect="if (openCountry) { $nextTick(() => $el.querySelector('.country-options .effect-inline')?.setAttribute('aria-current', 'true')) }"
     >
       <button 
-        @click.prevent="loadCountry($el); {% if section.settings.header_show_currency_selector %} $store.xHeaderMenu.closeMenu();{% endif %}"
-        class="toolbar-button relative pt-2.5 pb-2.5{% if menu_drawer %} pl-0 pr-5 rtl:pl-5 rtl:pr-0{% else %} rtl:pr-0 rtl:pl-5 pr-5 rtl:md:pr-5 lg:pl-5{% endif %} cursor-pointer {% if enable_footer %} md:pl-6{% endif %} hover-text-link duration-200 transition"
-        aria-expanded="false" aria-controls="CurrencyList"
+        x-ref="countryTrigger"
+        @click.prevent="openCountry ? openCountry = false : loadCountry($el); {% if section.settings.header_show_currency_selector %} $store.xHeaderMenu.closeMenu();{% endif %}"
+        class="toolbar-button currency-trigger relative pt-2.5 pb-2.5{% if menu_drawer %} pl-0 pr-5 rtl:pl-5 rtl:pr-0{% else %} rtl:pr-0 rtl:pl-5 pr-5 rtl:md:pr-5 lg:pl-5{% endif %} cursor-pointer {% if enable_footer %} md:pl-6{% endif %} hover-text-link duration-200 transition"
+        :aria-expanded="openCountry.toString()"
+        aria-controls="CurrencyList-{{ selector_id_suffix | default: section.id }}"
       >
         <span>
           {% if settings.stack_currency_enable %}
@@ -152,11 +156,13 @@
             {{ localization.country.name }} &#x200E;({{ localization.country.currency.iso_code }} {{ localization.country.currency.symbol }})&#x200E;
           {% endif %}
         </span>
-        <span x-show="!loading" class="absolute w-2.5 h-2.5 top-1/2 -translate-y-1/2 flex right-0 rtl:right-auto rtl:left-0" :class="openCountry && '-rotate-180'">{% render 'icon-alls', icon: 'icon-caret' %}</span>
+        <span x-show="!loading" class="currency-chevron absolute w-2.5 h-2.5 top-1/2 -translate-y-1/2 flex right-2">{% render 'icon-alls', icon: 'icon-caret' %}</span>
         <span x-show="loading" class="absolute w-3 h-3 top-[calc(50%-6px)] flex right-0 rtl:right-auto rtl:left-0" x-cloak>{% render 'icon-alls', icon: 'icon-loading' %}</span>
       </button>
       {% unless mobile or menu_drawer %}
-        <div class="country-options w-max pt-3 pb-3 pl-5 pr-5 absolute left-0 bottom-full z-[51] scrollbar-body shadow-md max-h-64 overflow-y-auto{% if enable_footer != true and logo_above == false %} right-0{% endif %} background-header{% if enable_footer %} background-footer sticky-footer bottom-9{% else %} bottom-0 text-[rgb(var(--colors-text-header))]{% unless mobile or menu_drawer %} lg:bottom-auto{% endunless %}{% endif %}" 
+        <div
+          id="CurrencyList-{{ selector_id_suffix | default: section.id }}"
+          class="country-options currency-panel w-max pt-3 pb-3 pl-5 pr-5 absolute left-0 bottom-full z-[51] scrollbar-body shadow-md max-h-64 overflow-y-auto{% if enable_footer != true and logo_above == false %} right-0{% endif %} background-header{% if enable_footer %} background-footer sticky-footer bottom-9{% else %} bottom-0 text-[rgb(var(--colors-text-header))]{% unless mobile or menu_drawer %} lg:bottom-auto{% endunless %}{% endif %}"
           {{ list_transition }}
           x-show="openCountry" @click.away="openCountry = false" x-cloak>
         </div>
@@ -179,7 +185,13 @@
             font-size: {{ text_size }}rem;
           }
         {% endstyle %}
-        <div class="country-options country-options-mobile-nav-{{ section.id }} w-[calc(100vw-32px)] absolute{% if locale_selector %} left-0 rtl:right-0 rtl:left-auto{% else %} right-0 rtl:left-0 rtl:right-auto{% endif %} bottom-full z-[51] scrollbar-body shadow-md max-h-[400px] overflow-y-auto{% if enable_footer != true and logo_above == false %} right-0{% endif %} background-header{% if enable_footer %} background-footer sticky-footer bottom-9{% else %} bottom-0 text-[rgb(var(--colors-text-header))]{% unless mobile or menu_drawer %} lg:bottom-auto{% endunless %}{% endif %}" x-show="openCountry" @click.away="openCountry = false" x-cloak>
+        <div
+          id="CurrencyList-{{ selector_id_suffix | default: section.id }}"
+          class="country-options currency-panel country-options-mobile-nav-{{ section.id }} w-[calc(100vw-32px)] absolute{% if locale_selector %} left-0 rtl:right-0 rtl:left-auto{% else %} right-0 rtl:left-0 rtl:right-auto{% endif %} bottom-full z-[51] scrollbar-body shadow-md max-h-[400px] overflow-y-auto{% if enable_footer != true and logo_above == false %} right-0{% endif %} background-header{% if enable_footer %} background-footer sticky-footer bottom-9{% else %} bottom-0 text-[rgb(var(--colors-text-header))]{% unless mobile or menu_drawer %} lg:bottom-auto{% endunless %}{% endif %}"
+          x-show="openCountry"
+          @click.away="openCountry = false"
+          x-cloak
+        >
         </div>
       {% endunless %}
       <input id="currency_selector" type="hidden" name="country_code" value="{{ localization.country.iso_code }}">

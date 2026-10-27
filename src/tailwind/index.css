@@ -112,6 +112,10 @@
 @import "./components/image-with-text.css";
 @import "./components/contact-form.css";
 @import "./components/header.css";
+@import "./components/footer.css";
+@import "./components/transparent-header-hero.css";
+@import "./components/collection-list-text.css";
+@import "./components/testimonials.css";
 @import "./components/announcement-bar.css";
 @import "./components/app-product-options.css";
 @import "./components/flash-sale.css";
@@ -121,5 +125,6 @@
 @import "./components/collection-page.css";
 @import "./components/app-review-options.css";
 @import "./components/app-wishlist-options.css";
+@import "./components/parallax-image-banner.css";
 
 [x-cloak] { display: none !important; }

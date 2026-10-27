@@ -1,0 +1,293 @@
+{% comment %}
+  Storefront header used when the configurable transparent-header feature is enabled.
+
+  Accepts:
+  - section: owning header section
+  - transparent_page: whether this request starts in the transparent state
+{% endcomment %}
+
+{%- liquid
+  assign menu = section.settings.menu
+  assign has_gift = false
+  assign sidebar_blocks = section.blocks | where: 'type', 'sidebar_content'
+  if section.settings.show_gift_icon and section.settings.enable_sidebar and sidebar_blocks.size > 0
+    assign has_gift = true
+  endif
+
+  assign solid_logo = section.settings.logo
+  assign transparent_logo = section.settings.logo_transparent
+  if solid_logo == blank and transparent_logo != blank
+    assign solid_logo = transparent_logo
+  endif
+  if transparent_logo == blank
+    assign transparent_logo = solid_logo
+  endif
+
+  assign logo_width_top = 128
+  assign logo_width_scrolled = logo_width_top | times: section.settings.logo_height_scrolled | divided_by: section.settings.logo_height_top
+  assign logo_width_mobile_scrolled = logo_width_top | times: section.settings.logo_height_mobile_scrolled | divided_by: section.settings.logo_height_mobile_top
+-%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --tsh-solid-bg: {{ section.settings.bg_color_solid }};
+    --tsh-transparent-text: {{ section.settings.text_color_transparent }};
+    --tsh-solid-text: {{ section.settings.text_color_solid }};
+    --tsh-fade-duration: {{ section.settings.bg_fade_duration }}ms;
+    --tsh-logo-duration: {{ section.settings.logo_shrink_duration }}ms;
+    --tsh-logo-height-top: {{ section.settings.logo_height_top }}px;
+    --tsh-logo-height-scrolled: {{ section.settings.logo_height_scrolled }}px;
+    --tsh-logo-height-mobile-top: {{ section.settings.logo_height_mobile_top }}px;
+    --tsh-logo-height-mobile-scrolled: {{ section.settings.logo_height_mobile_scrolled }}px;
+    --tsh-logo-width-top: {{ logo_width_top }}px;
+    --tsh-logo-width-scrolled: {{ logo_width_scrolled }}px;
+    --tsh-logo-width-mobile-scrolled: {{ logo_width_mobile_scrolled }}px;
+    --tsh-padding-top: {{ section.settings.header_padding_top }}px;
+    --tsh-padding-top-scrolled: {{ section.settings.header_padding_top_scrolled }}px;
+    --tsh-padding-bottom: {{ section.settings.header_padding_bottom }}px;
+    --tsh-padding-bottom-scrolled: {{ section.settings.header_padding_bottom_scrolled }}px;
+    --tsh-padding-inline: {{ section.settings.header_padding_inline }}px;
+    --tsh-mobile-height: {{ section.settings.header_height_mobile }}px;
+    --tsh-nav-font-size: {{ section.settings.nav_font_size }}px;
+    --tsh-nav-letter-spacing: {{ section.settings.nav_letter_spacing | divided_by: 100.0 }}em;
+    --tsh-nav-gap: {{ section.settings.nav_gap }}px;
+    --tsh-icon-size: {{ section.settings.icon_size }}px;
+    --tsh-icon-gap: {{ section.settings.icon_gap }}px;
+    --tsh-top-scrim-opacity: {{ section.settings.transparent_topbar_scrim | divided_by: 100.0 }};
+    --tsh-mega-column-width: {{ section.settings.mega_col_width }}px;
+    --tsh-mega-row-height: {{ section.settings.mega_row_height }}px;
+    --tsh-mega-font-size: {{ section.settings.mega_row_font_size }}px;
+    --tsh-mega-letter-spacing: {{ section.settings.mega_row_letter_spacing | divided_by: 100.0 }}em;
+    --tsh-mega-padding-inline: {{ section.settings.mega_padding_inline }}px;
+    --tsh-mega-padding-block: {{ section.settings.mega_padding_block }}px;
+    --tsh-mega-bg: {{ section.settings.mega_bg_color }};
+    --tsh-mega-text: {{ section.settings.mega_text_color }};
+    --tsh-mega-divider: {{ section.settings.mega_divider_color }};
+    --tsh-mega-shadow-opacity: {{ section.settings.mega_shadow_opacity | divided_by: 100.0 }};
+    --tsh-mega-open-duration: {{ section.settings.mega_open_duration }}ms;
+    --tsh-mega-close-duration: {{ section.settings.mega_close_duration }}ms;
+    --tsh-drawer-width: {{ section.settings.drawer_width }}vw;
+    --tsh-drawer-max-width: {{ section.settings.drawer_max_width }}px;
+    --tsh-drawer-bg: {{ section.settings.drawer_bg_color }};
+    --tsh-drawer-scrim-opacity: {{ section.settings.drawer_scrim_opacity | divided_by: 100.0 }};
+    --tsh-drawer-row-height: {{ section.settings.drawer_row_height }}px;
+    --tsh-drawer-font-size: {{ section.settings.drawer_row_font_size }}px;
+    --tsh-drawer-letter-spacing: {{ section.settings.drawer_row_letter_spacing | divided_by: 100.0 }}em;
+    --tsh-drawer-text: {{ section.settings.drawer_text_color }};
+    --tsh-drawer-text-open: {{ section.settings.drawer_text_color_open }};
+    --tsh-drawer-divider: {{ section.settings.drawer_divider_color }};
+    --tsh-drawer-divider-inset: {{ section.settings.drawer_divider_inset }}px;
+    --tsh-drawer-padding-inline: {{ section.settings.drawer_padding_inline }}px;
+    --tsh-drawer-subrow-height: {{ section.settings.drawer_subrow_height }}px;
+    --tsh-drawer-subrow-indent: {{ section.settings.drawer_subrow_indent }}px;
+    --tsh-drawer-open-duration: {{ section.settings.drawer_open_duration }}ms;
+    --tsh-drawer-close-duration: {{ section.settings.drawer_close_duration }}ms;
+    --tsh-drawer-accordion-duration: {{ section.settings.drawer_accordion_duration }}ms;
+  }
+{%- endstyle -%}
+
+<div
+  id="tsh-header-root-{{ section.id }}"
+  class="tsh-header{% if transparent_page %} tsh-header--transparent-page{% else %} tsh-header--solid-page{% endif %}"
+  data-transparent-header
+  data-scroll-threshold="{{ section.settings.scroll_threshold }}"
+  x-data="{ show: false }"
+  x-init="$store.xHeaderMenu.initTransparentHeader($el)"
+  :class="{
+    'is-solid': !$store.xHeaderMenu.tshAtTop || $store.xHeaderMenu.tshHovered || $store.xHeaderMenu.tshOpenMega !== null || $store.xHeaderMenu.tshMenuOpen,
+    'is-scrolled': !$store.xHeaderMenu.tshAtTop
+  }"
+  @mouseenter="$store.xHeaderMenu.tshHovered = true"
+  @mouseleave="$store.xHeaderMenu.tshHovered = false"
+  @click.outside="$store.xHeaderMenu.closeTransparentMega()"
+>
+  <div class="tsh-header__top-scrim" aria-hidden="true"></div>
+  <div class="tsh-header__background" aria-hidden="true"></div>
+
+  <header class="tsh-header__inner" role="banner">
+    <div class="tsh-header__mobile-left">
+      {%- if menu != blank -%}
+        <button
+          type="button"
+          class="tsh-header__icon tsh-header__menu-trigger"
+          aria-label="Open menu"
+          aria-controls="tsh-drawer-{{ section.id }}"
+          :aria-expanded="$store.xHeaderMenu.tshMenuOpen.toString()"
+          @click="$store.xHeaderMenu.openTransparentDrawer($el)"
+        >
+          {% render 'icon-alls', icon: 'icon-hamburger' %}
+        </button>
+      {%- endif -%}
+      {%- if has_gift -%}
+        <button type="button" class="tsh-header__icon" aria-label="Rewards" @click="show = true">
+          {% render 'icon-labels-bags', icon: section.settings.icon_header_sidebar %}
+        </button>
+      {%- endif -%}
+    </div>
+
+    <div class="tsh-header__logo-row">
+      <a href="{{ routes.root_url }}" class="tsh-header__logo" aria-label="{{ shop.name | escape }}">
+        {%- if solid_logo != blank -%}
+          {%- assign solid_logo_alt = solid_logo.alt | default: shop.name | escape -%}
+          <img
+            src="{{ solid_logo | image_url: width: 400 }}"
+            srcset="{{ solid_logo | image_url: width: 160 }} 160w, {{ solid_logo | image_url: width: 240 }} 240w, {{ solid_logo | image_url: width: 400 }} 400w"
+            sizes="200px"
+            width="{{ solid_logo.width }}"
+            height="{{ solid_logo.height }}"
+            alt="{{ solid_logo_alt }}"
+            class="tsh-header__logo-image tsh-header__logo-image--solid{% if transparent_logo == solid_logo %} tsh-header__logo-image--single{% endif %}"
+            loading="eager"
+          >
+          {%- if transparent_logo != blank and transparent_logo != solid_logo -%}
+            {%- assign transparent_logo_alt = transparent_logo.alt | default: shop.name | escape -%}
+            <img
+              src="{{ transparent_logo | image_url: width: 400 }}"
+              srcset="{{ transparent_logo | image_url: width: 160 }} 160w, {{ transparent_logo | image_url: width: 240 }} 240w, {{ transparent_logo | image_url: width: 400 }} 400w"
+              sizes="200px"
+              width="{{ transparent_logo.width }}"
+              height="{{ transparent_logo.height }}"
+              alt="{{ transparent_logo_alt }}"
+              class="tsh-header__logo-image tsh-header__logo-image--transparent"
+              loading="eager"
+            >
+          {%- endif -%}
+        {%- else -%}
+          <span class="tsh-header__wordmark">{{ shop.name | escape }}</span>
+        {%- endif -%}
+      </a>
+    </div>
+
+    <nav class="tsh-header__nav-row" aria-label="Main">
+      {%- if menu != blank -%}
+        <ul class="tsh-nav__list tsh-nav__list--{{ section.settings.mega_panel_align }}" role="list">
+          {%- for link in menu.links -%}
+            {%- liquid
+              assign default_child_index = -1
+              for child_link in link.links
+                if default_child_index == -1 and child_link.links != blank
+                  assign default_child_index = forloop.index0
+                endif
+              endfor
+              assign default_has_children = false
+              if default_child_index != -1
+                assign default_has_children = true
+              endif
+            -%}
+            <li
+              class="tsh-nav__item"
+              @mouseenter="$store.xHeaderMenu.cancelTransparentMegaClose(); {% if link.links != blank %}$store.xHeaderMenu.openTransparentMega({{ forloop.index0 }}, {{ default_child_index }}, {{ default_has_children | json }}, $el.querySelector('.tsh-nav__trigger')){% endif %}"
+              @mouseleave="$store.xHeaderMenu.queueTransparentMegaClose({{ section.settings.mega_hover_close_delay }})"
+              @focusout="setTimeout(() => { if (!$el.contains(document.activeElement)) $store.xHeaderMenu.closeTransparentMega() }, 0)"
+            >
+              {%- if link.links != blank and section.settings.mega_enable -%}
+                <button
+                  type="button"
+                  class="tsh-nav__link tsh-nav__trigger"
+                  aria-controls="tsh-mega-{{ section.id }}-{{ forloop.index0 }}"
+                  :aria-expanded="($store.xHeaderMenu.tshOpenMega === {{ forloop.index0 }}).toString()"
+                  @focus="$store.xHeaderMenu.openTransparentMega({{ forloop.index0 }}, {{ default_child_index }}, {{ default_has_children | json }}, $el)"
+                  @click="$store.xHeaderMenu.toggleTransparentMega({{ forloop.index0 }}, {{ default_child_index }}, {{ default_has_children | json }}, $el)"
+                  @keydown.space.prevent="$store.xHeaderMenu.toggleTransparentMega({{ forloop.index0 }}, {{ default_child_index }}, {{ default_has_children | json }}, $el)"
+                >
+                  {{ link.title | escape }}
+                </button>
+                {% render 'mega-menu',
+                  link: link,
+                  top_index: forloop.index0,
+                  default_child_index: default_child_index,
+                  section: section
+                %}
+              {%- else -%}
+                <a
+                  href="{{ link.url }}"
+                  class="tsh-nav__link"
+                  {% if link.current or link.child_active %}
+                    aria-current="page"
+                  {% endif %}
+                >
+                  {{ link.title | escape }}
+                </a>
+              {%- endif -%}
+            </li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+    </nav>
+
+    <div class="tsh-header__icons">
+      {%- if settings.search_enabled -%}
+        <div
+          class="tsh-header__search"
+          @init-run.window="$store.xHeaderMenu.renderAjax($el, 'header-search-block', '#ajax-loading-header-search')"
+        >
+          <a
+            id="SearchOpen"
+            href="{{ routes.search_url }}"
+            class="tsh-header__icon"
+            aria-label="Search"
+            @click.prevent="setTimeout(() => { $store.xModal.setActiveElement('SearchOpen') }, 0)"
+          >
+            {% render 'icon-alls', icon: 'icon-search', animation_class: 'icon-animation' %}
+          </a>
+        </div>
+      {%- endif -%}
+
+      {%- if section.settings.show_account_icon and shop.customer_accounts_enabled -%}
+        <shopify-account class="tsh-header__account" menu="{{ settings.customer_account_menu }}">
+          <div slot="signed-out-avatar">
+            <span class="tsh-header__icon" aria-label="Account">
+              {% render 'icon-alls', icon: 'icon-account', animation_class: 'icon-animation' %}
+            </span>
+          </div>
+        </shopify-account>
+      {%- endif -%}
+
+      {%- if has_gift -%}
+        <button type="button" class="tsh-header__icon tsh-header__gift-desktop" aria-label="Rewards" @click="show = true">
+          {% render 'icon-labels-bags', icon: section.settings.icon_header_sidebar %}
+        </button>
+      {%- endif -%}
+
+      {%- unless settings.hide_cart -%}
+        <a
+          id="cart-icon"
+          href="{{ routes.cart_url }}"
+          class="tsh-header__icon tsh-header__cart"
+          {% if settings.cart_type != 'page' %}
+            @click.prevent="setTimeout(() => { $store.xModal.setActiveElement('cart-icon'); $store.xMiniCart.openCart() }, 0)"
+            :class="$store.xMiniCart.open && 'pointer-events-none'"
+          {% endif %}
+          aria-controls="CartDrawer"
+          aria-expanded="false"
+          aria-label="Cart"
+        >
+          {% render 'icon-cart-all', icon: 'icon-cart', animation_class: 'icon-animation' %}
+          <span id="cart-icon-bubble">
+            <span
+              class="tsh-header__cart-count{% if cart == empty %} is-empty{% endif %}"
+              data-value="{{ cart.item_count }}"
+              aria-live="polite"
+            >
+              {%- if cart.item_count < 100 -%}{{ cart.item_count }}{%- else -%}99+{%- endif -%}
+            </span>
+          </span>
+        </a>
+      {%- endunless -%}
+    </div>
+  </header>
+
+  {%- if menu != blank -%}
+    {% render 'menu-drawer', menu: menu, section: section %}
+  {%- endif -%}
+
+  {%- if has_gift -%}
+    <template x-teleport="body">
+      {% render 'header-sidebar', section: section %}
+    </template>
+  {%- endif -%}
+</div>
+
+{%- unless transparent_page -%}
+  <div class="tsh-header-spacer" aria-hidden="true"></div>
+{%- endunless -%}

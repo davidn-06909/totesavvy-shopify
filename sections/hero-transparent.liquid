@@ -1,0 +1,642 @@
+{%- liquid
+  case section.settings.height_desktop
+    when 'svh85'
+      assign hero_height_desktop = '85svh'
+    when 'svh70'
+      assign hero_height_desktop = '70svh'
+    when 'fixed'
+      assign hero_height_desktop = section.settings.height_desktop_fixed | append: 'px'
+    else
+      assign hero_height_desktop = '100svh'
+  endcase
+
+  case section.settings.height_mobile
+    when 'svh85'
+      assign hero_height_mobile = '85svh'
+    when 'svh70'
+      assign hero_height_mobile = '70svh'
+    when 'fixed'
+      assign hero_height_mobile = section.settings.height_mobile_fixed | append: 'px'
+    else
+      assign hero_height_mobile = '100svh'
+  endcase
+
+  assign scrim_desktop = 'none'
+  unless section.settings.scrim_direction == 'none'
+    assign scrim_desktop_alpha = section.settings.scrim_opacity | divided_by: 100.0
+    capture scrim_desktop
+      echo 'linear-gradient('
+      echo section.settings.scrim_direction
+      echo ', rgb(0 0 0 / '
+      echo scrim_desktop_alpha
+      echo ') 0%, transparent 55%)'
+    endcapture
+  endunless
+
+  assign scrim_mobile = 'none'
+  unless section.settings.scrim_direction_mobile == 'none'
+    assign scrim_mobile_alpha = section.settings.scrim_opacity_mobile | divided_by: 100.0
+    capture scrim_mobile
+      echo 'linear-gradient('
+      echo section.settings.scrim_direction_mobile
+      echo ', rgb(0 0 0 / '
+      echo scrim_mobile_alpha
+      echo ') 0%, transparent 60%)'
+    endcapture
+  endunless
+
+  assign button_1_url = section.settings.button_1_url | default: '/collections/all'
+  assign button_2_url = section.settings.button_2_url | default: '/collections/all'
+  assign show_actions = false
+  if section.settings.button_1_label != blank or section.settings.button_2_label != blank
+    assign show_actions = true
+  endif
+-%}
+
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --tsh-hero-height-desktop: {{ hero_height_desktop }};
+    --tsh-hero-height-mobile: {{ hero_height_mobile }};
+    --tsh-hero-image-position: {{ section.settings.image_position }};
+    --tsh-hero-title-size: {{ section.settings.title_size_desktop }}px;
+    --tsh-hero-title-size-tablet: {{ section.settings.title_size_tablet }}px;
+    --tsh-hero-title-size-mobile: {{ section.settings.title_size_mobile }}px;
+    --tsh-hero-title-line-height: {{ section.settings.title_line_height | divided_by: 100.0 }};
+    --tsh-hero-title-letter-spacing: {{ section.settings.title_letter_spacing | divided_by: 100.0 }}em;
+    --tsh-hero-title-color: {{ section.settings.title_color }};
+    --tsh-hero-title-max-width: {{ section.settings.title_max_width }}px;
+    --tsh-hero-subtitle-size: {{ section.settings.subtitle_size_desktop }}px;
+    --tsh-hero-subtitle-size-mobile: {{ section.settings.subtitle_size_mobile }}px;
+    --tsh-hero-subtitle-color: {{ section.settings.subtitle_color }};
+    --tsh-hero-title-gap: {{ section.settings.gap_title_subtitle }}px;
+    --tsh-hero-actions-gap-top: {{ section.settings.gap_subtitle_actions }}px;
+    --tsh-hero-button-gap: {{ section.settings.button_gap }}px;
+    --tsh-hero-button-height: {{ section.settings.button_height }}px;
+    --tsh-hero-button-height-mobile: {{ section.settings.button_height_mobile }}px;
+    --tsh-hero-button-padding: {{ section.settings.button_padding_inline }}px;
+    --tsh-hero-button-padding-mobile: {{ section.settings.button_padding_inline_mobile }}px;
+    --tsh-hero-button-font-size: {{ section.settings.button_font_size }}px;
+    --tsh-hero-button-font-size-mobile: {{ section.settings.button_font_size_mobile }}px;
+    --tsh-hero-button-letter-spacing: {{ section.settings.button_letter_spacing | divided_by: 100.0 }}em;
+    --tsh-hero-button-radius: {{ section.settings.button_radius }}px;
+    --tsh-hero-button-1-bg: {{ section.settings.button_1_bg }};
+    --tsh-hero-button-1-bg-hover: {{ section.settings.button_1_bg_hover }};
+    --tsh-hero-button-1-text: {{ section.settings.button_1_text_color }};
+    --tsh-hero-content-offset: {{ section.settings.content_offset_inline }}px;
+    --tsh-hero-content-offset-mobile: {{ section.settings.content_offset_inline_mobile }}px;
+    --tsh-hero-content-block-mobile: {{ section.settings.content_offset_block_mobile }}px;
+    --tsh-hero-content-max-width: {{ section.settings.content_max_width }}px;
+    --tsh-hero-scrim-desktop: {{ scrim_desktop | strip }};
+    --tsh-hero-scrim-mobile: {{ scrim_mobile | strip }};
+  }
+{%- endstyle -%}
+
+<section
+  class="tsh-hero"
+  data-align-desktop="{{ section.settings.content_align_desktop }}"
+  data-valign-desktop="{{ section.settings.content_valign_desktop }}"
+  data-align-mobile="{{ section.settings.content_align_mobile }}"
+  data-valign-mobile="{{ section.settings.content_valign_mobile }}"
+>
+  <div class="tsh-hero__media">
+    {%- if section.settings.image != blank -%}
+      {%- assign image_alt = section.settings.image.alt | default: section.settings.title | escape -%}
+      {{
+        section.settings.image
+        | image_url: width: 3840
+        | image_tag:
+          widths: '375, 550, 750, 1100, 1500, 2000, 2600, 3200, 3840',
+          sizes: '100vw',
+          loading: 'eager',
+          fetchpriority: 'high',
+          class: 'tsh-hero__image',
+          alt: image_alt
+      }}
+    {%- else -%}
+      {{ 'lifestyle-1' | placeholder_svg_tag: 'tsh-hero__placeholder' }}
+    {%- endif -%}
+  </div>
+  <div class="tsh-hero__scrim" aria-hidden="true"></div>
+
+  <div class="tsh-hero__content">
+    {%- if section.settings.title != blank -%}
+      <h1 class="tsh-hero__title{% if section.settings.title_uppercase %} tsh-hero__title--uppercase{% endif %}">
+        {{ section.settings.title | escape }}
+      </h1>
+    {%- endif -%}
+
+    {%- if section.settings.subtitle != blank -%}
+      <p class="tsh-hero__subtitle">{{ section.settings.subtitle | escape }}</p>
+    {%- endif -%}
+
+    {%- if show_actions -%}
+      <div class="tsh-hero__actions">
+        {%- if section.settings.button_1_label != blank -%}
+          <a class="tsh-hero__button tsh-hero__button--primary" href="{{ button_1_url }}">
+            {{ section.settings.button_1_label | escape }}
+          </a>
+        {%- endif -%}
+        {%- if section.settings.button_2_label != blank -%}
+          <a
+            class="tsh-hero__button tsh-hero__button--secondary"
+            href="{{ button_2_url }}"
+            style="--tsh-hero-button-2-bg: {{ section.settings.button_2_bg }};"
+          >
+            {{ section.settings.button_2_label | escape }}
+          </a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Hero — transparent",
+  "tag": "section",
+  "class": "section-hero-transparent",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Media"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Background image"
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "label": "Image position",
+      "options": [
+        { "value": "top", "label": "Top" },
+        { "value": "center", "label": "Center" },
+        { "value": "bottom", "label": "Bottom" },
+        { "value": "left", "label": "Left" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "select",
+      "id": "height_desktop",
+      "label": "Desktop height",
+      "options": [
+        { "value": "svh100", "label": "100% viewport" },
+        { "value": "svh85", "label": "85% viewport" },
+        { "value": "svh70", "label": "70% viewport" },
+        { "value": "fixed", "label": "Fixed" }
+      ],
+      "default": "svh100"
+    },
+    {
+      "type": "range",
+      "id": "height_desktop_fixed",
+      "min": 400,
+      "max": 1000,
+      "step": 10,
+      "unit": "px",
+      "label": "Desktop fixed height",
+      "default": 700
+    },
+    {
+      "type": "select",
+      "id": "height_mobile",
+      "label": "Mobile height",
+      "options": [
+        { "value": "svh100", "label": "100% viewport" },
+        { "value": "svh85", "label": "85% viewport" },
+        { "value": "svh70", "label": "70% viewport" },
+        { "value": "fixed", "label": "Fixed" }
+      ],
+      "default": "svh100"
+    },
+    {
+      "type": "range",
+      "id": "height_mobile_fixed",
+      "min": 320,
+      "max": 900,
+      "step": 10,
+      "unit": "px",
+      "label": "Mobile fixed height",
+      "default": 560
+    },
+    {
+      "type": "header",
+      "content": "Title and subtitle"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Luxurious Organization"
+    },
+    {
+      "type": "range",
+      "id": "title_size_desktop",
+      "min": 28,
+      "max": 120,
+      "step": 2,
+      "unit": "px",
+      "label": "Desktop title size",
+      "default": 72
+    },
+    {
+      "type": "range",
+      "id": "title_size_tablet",
+      "min": 24,
+      "max": 90,
+      "step": 2,
+      "unit": "px",
+      "label": "Tablet title size",
+      "default": 54
+    },
+    {
+      "type": "range",
+      "id": "title_size_mobile",
+      "min": 18,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "label": "Mobile title size",
+      "default": 34
+    },
+    {
+      "type": "range",
+      "id": "title_line_height",
+      "min": 90,
+      "max": 160,
+      "step": 5,
+      "unit": "%",
+      "label": "Title line height",
+      "default": 115
+    },
+    {
+      "type": "range",
+      "id": "title_letter_spacing",
+      "min": -5,
+      "max": 20,
+      "step": 1,
+      "unit": "%",
+      "label": "Title letter spacing",
+      "default": 1
+    },
+    {
+      "type": "checkbox",
+      "id": "title_uppercase",
+      "label": "Uppercase title",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "range",
+      "id": "title_max_width",
+      "min": 300,
+      "max": 1000,
+      "step": 10,
+      "unit": "px",
+      "label": "Title maximum width",
+      "default": 620
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Subtitle",
+      "default": "If it has straps, we'll organize it."
+    },
+    {
+      "type": "range",
+      "id": "subtitle_size_desktop",
+      "min": 12,
+      "max": 32,
+      "step": 1,
+      "unit": "px",
+      "label": "Desktop subtitle size",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "subtitle_size_mobile",
+      "min": 10,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Mobile subtitle size",
+      "default": 13
+    },
+    {
+      "type": "color",
+      "id": "subtitle_color",
+      "label": "Subtitle color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "range",
+      "id": "gap_title_subtitle",
+      "min": 0,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "label": "Title to subtitle gap",
+      "default": 30
+    },
+    {
+      "type": "range",
+      "id": "gap_subtitle_actions",
+      "min": 0,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "label": "Subtitle to buttons gap",
+      "default": 26
+    },
+    {
+      "type": "header",
+      "content": "Buttons"
+    },
+    {
+      "type": "text",
+      "id": "button_1_label",
+      "label": "First button label",
+      "default": "Shop All"
+    },
+    {
+      "type": "url",
+      "id": "button_1_url",
+      "label": "First button URL",
+      "info": "Defaults to /collections/all when blank."
+    },
+    {
+      "type": "color",
+      "id": "button_1_bg",
+      "label": "First button background",
+      "default": "#F9E4E4"
+    },
+    {
+      "type": "color",
+      "id": "button_1_bg_hover",
+      "label": "First button hover background",
+      "default": "#F2D6D6"
+    },
+    {
+      "type": "color",
+      "id": "button_1_text_color",
+      "label": "First button text",
+      "default": "#1A1A1A"
+    },
+    {
+      "type": "text",
+      "id": "button_2_label",
+      "label": "Second button label",
+      "default": "Shop This"
+    },
+    {
+      "type": "url",
+      "id": "button_2_url",
+      "label": "Second button URL",
+      "info": "Defaults to /collections/all when blank."
+    },
+    {
+      "type": "color",
+      "id": "button_2_bg",
+      "label": "Second button background",
+      "default": "#F9E4E4"
+    },
+    {
+      "type": "range",
+      "id": "button_height",
+      "min": 32,
+      "max": 72,
+      "step": 2,
+      "unit": "px",
+      "label": "Desktop button height",
+      "default": 42
+    },
+    {
+      "type": "range",
+      "id": "button_height_mobile",
+      "min": 28,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "label": "Mobile button height",
+      "default": 38
+    },
+    {
+      "type": "range",
+      "id": "button_padding_inline",
+      "min": 12,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "label": "Desktop button side padding",
+      "default": 38
+    },
+    {
+      "type": "range",
+      "id": "button_padding_inline_mobile",
+      "min": 12,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "label": "Mobile button side padding",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "button_font_size",
+      "min": 10,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Desktop button font size",
+      "default": 13
+    },
+    {
+      "type": "range",
+      "id": "button_font_size_mobile",
+      "min": 10,
+      "max": 18,
+      "step": 1,
+      "unit": "px",
+      "label": "Mobile button font size",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "button_letter_spacing",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "%",
+      "label": "Button letter spacing",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "button_radius",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "label": "Button corner radius",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "button_gap",
+      "min": 0,
+      "max": 32,
+      "step": 1,
+      "unit": "px",
+      "label": "Button gap",
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "Content position"
+    },
+    {
+      "type": "select",
+      "id": "content_align_desktop",
+      "label": "Desktop horizontal alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "content_valign_desktop",
+      "label": "Desktop vertical alignment",
+      "options": [
+        { "value": "top", "label": "Top" },
+        { "value": "middle", "label": "Middle" },
+        { "value": "bottom", "label": "Bottom" }
+      ],
+      "default": "middle"
+    },
+    {
+      "type": "select",
+      "id": "content_align_mobile",
+      "label": "Mobile horizontal alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "content_valign_mobile",
+      "label": "Mobile vertical alignment",
+      "options": [
+        { "value": "top", "label": "Top" },
+        { "value": "middle", "label": "Middle" },
+        { "value": "bottom", "label": "Bottom" }
+      ],
+      "default": "bottom"
+    },
+    {
+      "type": "range",
+      "id": "content_offset_inline",
+      "min": 0,
+      "max": 160,
+      "step": 2,
+      "unit": "px",
+      "label": "Desktop edge offset",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "content_offset_inline_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "label": "Mobile side offset",
+      "default": 22
+    },
+    {
+      "type": "range",
+      "id": "content_offset_block_mobile",
+      "min": 0,
+      "max": 160,
+      "step": 2,
+      "unit": "px",
+      "label": "Mobile top or bottom offset",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "content_max_width",
+      "min": 300,
+      "max": 1200,
+      "step": 20,
+      "unit": "px",
+      "label": "Content maximum width",
+      "default": 660
+    },
+    {
+      "type": "header",
+      "content": "Image scrim"
+    },
+    {
+      "type": "select",
+      "id": "scrim_direction",
+      "label": "Desktop scrim direction",
+      "options": [
+        { "value": "to right", "label": "To right" },
+        { "value": "to top", "label": "To top" },
+        { "value": "none", "label": "None" }
+      ],
+      "default": "to right"
+    },
+    {
+      "type": "range",
+      "id": "scrim_opacity",
+      "min": 0,
+      "max": 80,
+      "step": 2,
+      "unit": "%",
+      "label": "Desktop scrim opacity",
+      "default": 28
+    },
+    {
+      "type": "select",
+      "id": "scrim_direction_mobile",
+      "label": "Mobile scrim direction",
+      "options": [
+        { "value": "to right", "label": "To right" },
+        { "value": "to top", "label": "To top" },
+        { "value": "none", "label": "None" }
+      ],
+      "default": "to top"
+    },
+    {
+      "type": "range",
+      "id": "scrim_opacity_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 2,
+      "unit": "%",
+      "label": "Mobile scrim opacity",
+      "default": 38
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero — transparent"
+    }
+  ]
+}
+{% endschema %}

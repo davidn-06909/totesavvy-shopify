@@ -1,0 +1,179 @@
+{% comment %}
+  Renders the merchant's three-level navigation tree for the transparent header.
+
+  Accepts:
+  - variant: "mega" or "drawer"
+  - link: top-level link (mega only)
+  - linklist: Shopify link list (drawer only)
+  - top_index: zero-based top-level index (mega only)
+  - section: owning header section
+  - section_id: owning header section id
+{% endcomment %}
+
+{%- if variant == 'mega' and link != blank -%}
+  <div class="tsh-mega__columns">
+    <ul class="tsh-mega__column tsh-mega__column--first" role="list">
+      {%- for child_link in link.links -%}
+        <li>
+          <a
+            href="{{ child_link.url }}"
+            class="tsh-mega__row tsh-mega__row--first"
+            :class="$store.xHeaderMenu.tshMegaChild[{{ top_index }}] === {{ forloop.index0 }} && 'is-active'"
+            @mouseenter="$store.xHeaderMenu.setTransparentMegaChild({{ top_index }}, {{ forloop.index0 }}, {{ child_link.links.size | json }})"
+            @focus="$store.xHeaderMenu.setTransparentMegaChild({{ top_index }}, {{ forloop.index0 }}, {{ child_link.links.size | json }})"
+            {% if child_link.current or child_link.child_active %}
+              aria-current="page"
+            {% endif %}
+          >
+            <span>{{ child_link.title | escape }}</span>
+            {%- if child_link.links != blank -%}
+              <svg class="tsh-mega__chevron" viewBox="0 0 10 16" aria-hidden="true">
+                <path d="m2 2 6 6-6 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            {%- endif -%}
+          </a>
+        </li>
+      {%- endfor -%}
+    </ul>
+
+    <div
+      class="tsh-mega__column tsh-mega__column--second"
+      x-show="$store.xHeaderMenu.tshMegaChildHasChildren[{{ top_index }}]"
+    >
+      {%- for child_link in link.links -%}
+        {%- if child_link.links != blank -%}
+          <ul
+            class="tsh-mega__second-list"
+            role="list"
+            x-show="$store.xHeaderMenu.tshMegaChild[{{ top_index }}] === {{ forloop.index0 }}"
+            :inert="$store.xHeaderMenu.tshMegaChild[{{ top_index }}] !== {{ forloop.index0 }}"
+          >
+            {%- for grandchild_link in child_link.links -%}
+              <li>
+                <a
+                  href="{{ grandchild_link.url }}"
+                  class="tsh-mega__row tsh-mega__row--second"
+                  {% if grandchild_link.current %}
+                    aria-current="page"
+                  {% endif %}
+                >
+                  {{ grandchild_link.title | escape }}
+                </a>
+              </li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+{%- elsif variant == 'drawer' and linklist != blank -%}
+  <ul class="tsh-drawer__list" role="list">
+    {%- for drawer_link in linklist.links -%}
+      {%- assign top_key = section_id | append: '-top-' | append: forloop.index0 -%}
+      {%- assign top_panel_id = 'tsh-drawer-sub-' | append: top_key -%}
+      <li class="tsh-drawer__item">
+        <div class="tsh-drawer__row-main">
+          <a
+            href="{{ drawer_link.url }}"
+            class="tsh-drawer__label"
+            :class="$store.xHeaderMenu.isTransparentAccordionOpen('{{ top_key }}') && 'is-open'"
+            {% if drawer_link.current or drawer_link.child_active %}
+              aria-current="page"
+            {% endif %}
+          >
+            {{ drawer_link.title | escape }}
+          </a>
+          {%- if drawer_link.links != blank -%}
+            <button
+              type="button"
+              class="tsh-drawer__toggle text-black!"
+              aria-controls="{{ top_panel_id }}"
+              :aria-expanded="$store.xHeaderMenu.isTransparentAccordionOpen('{{ top_key }}').toString()"
+              @click="$store.xHeaderMenu.toggleTransparentAccordion('{{ top_key }}')"
+            >
+              <span class="visually-hidden">Toggle {{ drawer_link.title | escape }}</span>
+              <svg viewBox="0 0 16 10" aria-hidden="true">
+                <path d="m2 2 6 6 6-6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          {%- endif -%}
+        </div>
+
+        {%- if drawer_link.links != blank -%}
+          <div
+            id="{{ top_panel_id }}"
+            class="tsh-drawer__sublist"
+            :class="$store.xHeaderMenu.isTransparentAccordionOpen('{{ top_key }}') && 'is-open'"
+            :aria-hidden="(!$store.xHeaderMenu.isTransparentAccordionOpen('{{ top_key }}')).toString()"
+            :inert="!$store.xHeaderMenu.isTransparentAccordionOpen('{{ top_key }}')"
+          >
+            <div class="tsh-drawer__sublist-inner">
+              <ul role="list">
+                {%- for child_link in drawer_link.links -%}
+                  {%- assign child_key = top_key | append: '-child-' | append: forloop.index0 -%}
+                  {%- assign child_panel_id = 'tsh-drawer-sub-' | append: child_key -%}
+                  <li class="tsh-drawer__subitem">
+                    <div class="tsh-drawer__subrow">
+                      <a
+                        href="{{ child_link.url }}"
+                        class="tsh-drawer__sublabel"
+                        :class="$store.xHeaderMenu.isTransparentAccordionOpen('{{ child_key }}') && 'is-open'"
+                        {% if child_link.current or child_link.child_active %}
+                          aria-current="page"
+                        {% endif %}
+                      >
+                        {{ child_link.title | escape }}
+                      </a>
+                      {%- if child_link.links != blank -%}
+                        <button
+                          type="button"
+                          class="tsh-drawer__toggle tsh-drawer__toggle--sub"
+                          aria-controls="{{ child_panel_id }}"
+                          :aria-expanded="$store.xHeaderMenu.isTransparentAccordionOpen('{{ child_key }}').toString()"
+                          @click="$store.xHeaderMenu.toggleTransparentAccordion('{{ child_key }}')"
+                        >
+                          <span class="visually-hidden">Toggle {{ child_link.title | escape }}</span>
+                          <svg viewBox="0 0 16 10" aria-hidden="true">
+                            <path d="m2 2 6 6 6-6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                        </button>
+                      {%- endif -%}
+                    </div>
+
+                    {%- if child_link.links != blank -%}
+                      <div
+                        id="{{ child_panel_id }}"
+                        class="tsh-drawer__sublist tsh-drawer__sublist--nested"
+                        :class="$store.xHeaderMenu.isTransparentAccordionOpen('{{ child_key }}') && 'is-open'"
+                        :aria-hidden="(!$store.xHeaderMenu.isTransparentAccordionOpen('{{ child_key }}')).toString()"
+                        :inert="!$store.xHeaderMenu.isTransparentAccordionOpen('{{ child_key }}')"
+                      >
+                        <div class="tsh-drawer__sublist-inner">
+                          <ul role="list">
+                            {%- for grandchild_link in child_link.links -%}
+                              <li>
+                                <a
+                                  href="{{ grandchild_link.url }}"
+                                  class="tsh-drawer__third-link"
+                                  {% if grandchild_link.current %}
+                                    aria-current="page"
+                                  {% endif %}
+                                >
+                                  {{ grandchild_link.title | escape }}
+                                </a>
+                              </li>
+                            {%- endfor -%}
+                          </ul>
+                        </div>
+                      </div>
+                    {%- endif -%}
+                  </li>
+                {%- endfor -%}
+              </ul>
+            </div>
+          </div>
+        {%- endif -%}
+      </li>
+    {%- endfor -%}
+  </ul>
+{%- endif -%}

@@ -29,6 +29,20 @@ if (!window.Romanics.loadedScript.has('header.js')) {
         announcementBeforeHeader: false,
         isTransparent: false,
         heightHeaderEls: [],
+        tshAtTop: true,
+        tshHovered: false,
+        tshMenuOpen: false,
+        tshOpenMega: null,
+        tshMegaChild: {},
+        tshMegaChildHasChildren: {},
+        tshOpenAccordions: [],
+        tshRoot: null,
+        tshDrawerTrigger: null,
+        tshMegaTrigger: null,
+        tshMegaCloseTimer: null,
+        tshController: null,
+        tshScrollFrame: null,
+        tshBodyStyles: null,
         reset() {
           this.headerObserver.disconnect();
           if (document.getElementById('x-header-sentinel-top')) document.getElementById('x-header-sentinel-top').remove();
@@ -57,6 +71,230 @@ if (!window.Romanics.loadedScript.has('header.js')) {
           this.passTop = false;
           this.passBottom = false;
           this.announcementBeforeHeader = false;
+          this.destroyTransparentHeader();
+        },
+        initTransparentHeader(root) {
+          this.destroyTransparentHeader(false);
+          this.tshRoot = root;
+          this.tshHovered = false;
+          this.tshMenuOpen = false;
+          this.tshOpenMega = null;
+          this.tshMegaChild = {};
+          this.tshMegaChildHasChildren = {};
+          this.tshOpenAccordions = [];
+
+          const threshold = Number.parseInt(root.dataset.scrollThreshold || '40', 10);
+          const controller = new AbortController();
+          this.tshController = controller;
+
+          const updateScrollState = () => {
+            this.tshScrollFrame = null;
+            this.tshAtTop = window.scrollY <= threshold;
+          };
+          const requestScrollUpdate = () => {
+            if (this.tshScrollFrame !== null) return;
+            this.tshScrollFrame = requestAnimationFrame(updateScrollState);
+          };
+
+          updateScrollState();
+          window.addEventListener('scroll', requestScrollUpdate, {
+            passive: true,
+            signal: controller.signal
+          });
+          window.addEventListener('resize', () => {
+            if (window.matchMedia('(min-width: 1024px)').matches && this.tshMenuOpen) {
+              this.closeTransparentDrawer(false);
+            } else if (this.tshOpenMega !== null) {
+              this.positionTransparentMega();
+            }
+          }, { passive: true, signal: controller.signal });
+          document.addEventListener('keydown', (event) => {
+            this.handleTransparentHeaderKeydown(event);
+          }, { signal: controller.signal });
+
+          if (Shopify.designMode) {
+            document.addEventListener('shopify:section:deselect', (event) => {
+              if (event.target.contains(root) || root.contains(event.target)) {
+                this.closeTransparentDrawer(false);
+                this.closeTransparentMega();
+              }
+            }, { signal: controller.signal });
+            document.addEventListener('shopify:section:unload', (event) => {
+              if (event.target.contains(root) || root.contains(event.target)) {
+                this.destroyTransparentHeader(false);
+              }
+            }, { signal: controller.signal });
+          }
+        },
+        destroyTransparentHeader(returnFocus = false) {
+          clearTimeout(this.tshMegaCloseTimer);
+          this.tshMegaCloseTimer = null;
+          if (this.tshScrollFrame !== null) {
+            cancelAnimationFrame(this.tshScrollFrame);
+            this.tshScrollFrame = null;
+          }
+          this.tshController?.abort();
+          this.tshController = null;
+          if (this.tshMenuOpen || this.tshBodyStyles) {
+            this.closeTransparentDrawer(returnFocus);
+          }
+          this.tshHovered = false;
+          this.tshOpenMega = null;
+          this.tshRoot = null;
+        },
+        openTransparentMega(index, defaultChild, hasChildren, trigger) {
+          this.cancelTransparentMegaClose();
+          this.tshOpenMega = index;
+          this.tshMegaChild = {
+            ...this.tshMegaChild,
+            [index]: defaultChild
+          };
+          this.tshMegaChildHasChildren = {
+            ...this.tshMegaChildHasChildren,
+            [index]: Boolean(hasChildren)
+          };
+          this.tshMegaTrigger = trigger || this.tshMegaTrigger;
+          requestAnimationFrame(() => this.positionTransparentMega(trigger));
+        },
+        toggleTransparentMega(index, defaultChild, hasChildren, trigger) {
+          if (this.tshOpenMega === index) {
+            this.closeTransparentMega();
+            return;
+          }
+          this.openTransparentMega(index, defaultChild, hasChildren, trigger);
+        },
+        closeTransparentMega(returnFocus = false) {
+          this.cancelTransparentMegaClose();
+          this.tshOpenMega = null;
+          if (returnFocus) {
+            this.tshMegaTrigger?.focus();
+          }
+          this.tshMegaTrigger = null;
+        },
+        positionTransparentMega(trigger = this.tshMegaTrigger) {
+          const item = trigger?.closest('.tsh-nav__item');
+          const panel = item?.querySelector('.tsh-mega');
+          if (!panel) return;
+
+          const itemRect = item.getBoundingClientRect();
+          const panelWidth = panel.offsetWidth;
+          const viewportGutter = 12;
+          let offset = 0;
+
+          if (itemRect.left + panelWidth > window.innerWidth - viewportGutter) {
+            offset = window.innerWidth - viewportGutter - itemRect.left - panelWidth;
+          }
+          if (itemRect.left + offset < viewportGutter) {
+            offset += viewportGutter - (itemRect.left + offset);
+          }
+
+          panel.style.setProperty('--tsh-mega-clamp-x', `${offset}px`);
+        },
+        queueTransparentMegaClose(delay = 180) {
+          this.cancelTransparentMegaClose();
+          this.tshMegaCloseTimer = setTimeout(() => {
+            this.closeTransparentMega();
+          }, Number(delay));
+        },
+        cancelTransparentMegaClose() {
+          clearTimeout(this.tshMegaCloseTimer);
+          this.tshMegaCloseTimer = null;
+        },
+        setTransparentMegaChild(index, childIndex, childCount) {
+          this.tshMegaChild = {
+            ...this.tshMegaChild,
+            [index]: childIndex
+          };
+          this.tshMegaChildHasChildren = {
+            ...this.tshMegaChildHasChildren,
+            [index]: Number(childCount) > 0
+          };
+          requestAnimationFrame(() => this.positionTransparentMega());
+        },
+        openTransparentDrawer(trigger) {
+          if (this.tshMenuOpen || !this.tshRoot) return;
+          this.closeTransparentMega();
+          this.tshDrawerTrigger = trigger;
+          this.tshMenuOpen = true;
+          this.lockTransparentHeaderScroll();
+          requestAnimationFrame(() => {
+            this.tshRoot?.querySelector('[data-tsh-drawer-close]')?.focus();
+          });
+        },
+        closeTransparentDrawer(returnFocus = true) {
+          if (!this.tshMenuOpen && !this.tshBodyStyles) return;
+          this.tshMenuOpen = false;
+          this.tshOpenAccordions = [];
+          this.unlockTransparentHeaderScroll();
+          if (returnFocus) {
+            requestAnimationFrame(() => this.tshDrawerTrigger?.focus());
+          }
+          this.tshDrawerTrigger = null;
+        },
+        lockTransparentHeaderScroll() {
+          if (this.tshBodyStyles) return;
+          const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+          this.tshBodyStyles = {
+            overflow: document.body.style.overflow,
+            paddingRight: document.body.style.paddingRight
+          };
+          document.body.style.overflow = 'hidden';
+          if (scrollbarWidth > 0) {
+            document.body.style.paddingRight = `${scrollbarWidth}px`;
+          }
+        },
+        unlockTransparentHeaderScroll() {
+          if (!this.tshBodyStyles) return;
+          document.body.style.overflow = this.tshBodyStyles.overflow;
+          document.body.style.paddingRight = this.tshBodyStyles.paddingRight;
+          this.tshBodyStyles = null;
+        },
+        toggleTransparentAccordion(key) {
+          if (this.tshOpenAccordions.includes(key)) {
+            this.tshOpenAccordions = this.tshOpenAccordions.filter((item) => item !== key);
+          } else {
+            this.tshOpenAccordions = [...this.tshOpenAccordions, key];
+          }
+        },
+        isTransparentAccordionOpen(key) {
+          return this.tshOpenAccordions.includes(key);
+        },
+        handleTransparentHeaderKeydown(event) {
+          if (event.key === 'Escape') {
+            if (this.tshMenuOpen) {
+              event.preventDefault();
+              this.closeTransparentDrawer();
+              return;
+            }
+            if (this.tshOpenMega !== null) {
+              event.preventDefault();
+              this.closeTransparentMega(true);
+            }
+            return;
+          }
+
+          if (event.key !== 'Tab' || !this.tshMenuOpen || !this.tshRoot) return;
+          const drawer = this.tshRoot.querySelector('.tsh-drawer__panel');
+          if (!drawer) return;
+
+          const focusable = Array.from(drawer.querySelectorAll(
+            'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )).filter((element) => element.offsetParent !== null && !element.closest('[inert]'));
+
+          if (focusable.length === 0) {
+            event.preventDefault();
+            return;
+          }
+
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
         },
         debounce(func, wait) {
           let timeout;
