@@ -140,6 +140,9 @@
   {% render 'section-divider' %}
 {%- endif -%}
 
+{%- if section.settings.layout_style == 'totesavvy' -%}
+  {%- render 'featured-collection-totesavvy' -%}
+{%- else -%}
 <div 
   class="x-container-featured-collection section-padding-{{ section.id }}"
   x-data="{ 
@@ -194,6 +197,7 @@
   {%- endif -%}
 </div>
 <script src="{{ 'featured-collection.js' | asset_url }}" defer></script>
+{%- endif -%}
 
 {% schema %}
 {
@@ -211,6 +215,22 @@
     {
       "type": "paragraph",
       "content": "t:sections.user_guide_link.section_and_blocks.featured_collection"
+    },
+    {
+      "type": "select",
+      "id": "layout_style",
+      "label": "Layout style",
+      "default": "classic",
+      "options": [
+        {
+          "value": "classic",
+          "label": "Classic"
+        },
+        {
+          "value": "totesavvy",
+          "label": "ToteSavvy"
+        }
+      ]
     },
     {
       "type": "text",
@@ -1136,6 +1156,29 @@
     {
       "name": "t:sections.featured-collection.name",
       "category": "t:categories.collections",
+      "blocks": [
+        {
+          "type": "collection"
+        }
+      ]
+    },
+    {
+      "name": "Featured collection - ToteSavvy",
+      "category": "t:categories.collections",
+      "settings": {
+        "layout_style": "totesavvy",
+        "title": "SHOP ACCESSORIES",
+        "subheading": "Not only will we organize your bag, we'll fill it with all the right essentials.",
+        "heading_alignment": "center",
+        "columns_desktop": 4,
+        "rows_desktop": 2,
+        "enable_desktop_slider": true,
+        "swiper_on_mobile": true,
+        "padding_top": 64,
+        "padding_bottom": 64,
+        "padding_top_mobile": 48,
+        "padding_bottom_mobile": 44
+      },
       "blocks": [
         {
           "type": "collection"
