@@ -14,53 +14,28 @@
     "footer": {
       "type": "footer",
       "blocks": {
-        "footer-2": {
-          "type": "text",
-          "settings": {
-            "open_by_default": false,
-            "heading_text": "Custom text",
-            "subtext": "<p>Enter custom message or instruction.</p>",
-            "show_social_icons": false,
-            "icon_layout": "horizontal",
-            "image_width": 100,
-            "link_image_footer": "",
-            "open_new_window": false
-          }
-        },
         "footer-1": {
           "type": "link_list",
           "settings": {
-            "open_by_default": false,
-            "heading_menu": "Menu",
-            "menu": "",
-            "show_social_icons": false
-          }
-        },
-        "footer-0": {
-          "type": "link_list",
-          "settings": {
-            "open_by_default": false,
-            "heading_menu": "Menu",
-            "menu": "",
+            "heading_menu": "RESOURCES",
+            "menu": "customer-service",
             "show_social_icons": false
           }
         },
         "link_list_JMLJPG": {
           "type": "link_list",
           "settings": {
-            "open_by_default": false,
-            "heading_menu": "Menu",
-            "menu": "",
+            "heading_menu": "SUPPORT",
+            "menu": "shoe-brands",
             "show_social_icons": false
           }
         },
         "text_fa7UTa": {
           "type": "text",
           "settings": {
-            "open_by_default": false,
-            "heading_text": "Custom text",
-            "subtext": "<p>Enter custom message or instruction.</p>",
-            "show_social_icons": false,
+            "heading_text": "Social",
+            "subtext": "",
+            "show_social_icons": true,
             "icon_layout": "horizontal",
             "image_width": 100,
             "link_image_footer": "",
@@ -69,19 +44,15 @@
         }
       },
       "block_order": [
-        "footer-2",
         "footer-1",
-        "footer-0",
         "link_list_JMLJPG",
         "text_fa7UTa"
       ],
       "settings": {
-        "columns_desktop": 5,
-        "show_language_selector": true,
         "show_currency_selector": true,
         "show_social_icons": false,
         "payment_enable": true,
-        "custom_payment": "",
+        "custom_payment": "amazon,american_express,apple_pay,diners_club,discover,google_pay,mastercard,shop_pay,visa,paypal",
         "show_copyright": true,
         "add_copyright_text": "",
         "additional_layout": "horizontal",
@@ -161,6 +132,10 @@
         "heading_color_dark": "rgba(0,0,0,0)",
         "heading_highlight_color_dark": "rgba(0,0,0,0)",
         "text_color_dark": "rgba(0,0,0,0)",
+        "swiper_on_mobile": false,
+        "enable_arrow_mobile": false,
+        "auto_play": false,
+        "change_slides_speed": 5,
         "max_columns": 1,
         "spacing": 28,
         "height_desktop": 300,
@@ -168,15 +143,15 @@
         "show_section_divider": false,
         "full_width": true,
         "padding_full_width": false,
+        "edge_style": "adapt",
         "padding_top": 0,
         "padding_bottom": 0,
-        "swiper_on_mobile": false,
-        "enable_arrow_mobile": false,
         "min_columns_mobile": "1",
         "spacing_mobile": 0,
         "height_mobile": 250,
         "show_section_divider_mobile": false,
         "full_width_mobile": false,
+        "edge_style_mobile": "adapt",
         "padding_top_mobile": 0,
         "padding_bottom_mobile": 0
       }

@@ -9,15 +9,40 @@
  */
 {
   "sections": {
+    "parallax_image_banner_about": {
+      "type": "parallax-image-banner",
+      "settings": {
+        "height_desktop": 450,
+        "height_mobile": 500,
+        "overlay_color": "#000000",
+        "overlay_opacity": 20,
+        "enable_parallax": true,
+        "title": "YOUR BAG, BUT SMARTER",
+        "heading_tag": "h1",
+        "subtitle": "We get it — you've got taste. That's why ToteSavvy was designed to work with your existing bag collection, not against it. No matter what bag you carry, ToteSavvy gives you the pockets, structure, and functionality you've been yearning for.",
+        "content_alignment": "center",
+        "content_max_width": 1320,
+        "title_color": "#FFFFFF",
+        "title_size_desktop": 58,
+        "title_size_mobile": 28,
+        "title_font_weight": "400",
+        "subtitle_color": "#FFFFFF",
+        "subtitle_size_desktop": 16,
+        "subtitle_size_mobile": 18,
+        "subtitle_font_weight": "600"
+      }
+    },
     "main": {
       "type": "main-page",
       "settings": {
+        "show_heading": false,
         "padding_top": 28,
         "padding_bottom": 28
       }
     }
   },
   "order": [
+    "parallax_image_banner_about",
     "main"
   ]
 }
