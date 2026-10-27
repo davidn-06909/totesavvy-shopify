@@ -284,7 +284,7 @@
   >
   {% # theme-check-enable ImgLazyLoading %}
 {% endunless %}
-  <div class="w-full overflow-hidden pl-5 pr-5 md:pl-10 md:pr-10 z-10{% if image_ratio == "round" %}{% if image == blank and block.settings.video == blank %} flex pb-[100.0%] rounded-full items-center promotion-block-{{ block.id }} text-center{% else %} hidden{% endif %}{% endif %} absolute {% unless image_mobile == blank and video_type == false %} pointer-events-none{% endunless %} top-0 right-0 bottom-0 left-0 {{ class_layout }} pt-6 pb-6 lg:pt-8 lg:pb-8 text-{{ alignment }} rtl:text-{% if alignment == 'center' %}center{% elsif alignment == 'left' %}right{% else %}left{% endif %}">
+  <div class="w-full overflow-hidden z-10{% if image_ratio == "round" %}{% if image == blank and block.settings.video == blank %} flex pb-[100.0%] rounded-full items-center promotion-block-{{ block.id }} text-center{% else %} hidden{% endif %}{% endif %} absolute {% unless image_mobile == blank and video_type == false %} pointer-events-none{% endunless %} top-0 right-0 bottom-0 left-0 {{ class_layout }} pt-6 pb-6 lg:pt-8 lg:pb-8 text-{{ alignment }} rtl:text-{% if alignment == 'center' %}center{% elsif alignment == 'left' %}right{% else %}left{% endif %}">
     <div class="text-color--{{ block.id }}{% if image_ratio == "round" %} absolute top-1/2 -translate-y-1/2 left-4 right-4{% else %} w-full{% endif %}">
       {% if image_link != blank %}
         <a href="{{ image_link }}" {% if open_new_window_image %} target="_blank"{% endif %} class="absolute top-0 left-0 bottom-0 right-0 z-20"></a>
