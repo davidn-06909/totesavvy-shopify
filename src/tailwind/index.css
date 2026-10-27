@@ -112,6 +112,7 @@
 @import "./components/image-with-text.css";
 @import "./components/contact-form.css";
 @import "./components/header.css";
+@import "./components/transparent-header-hero.css";
 @import "./components/announcement-bar.css";
 @import "./components/app-product-options.css";
 @import "./components/flash-sale.css";

@@ -1,0 +1,122 @@
+{% comment %}
+  Renders the transparent header's mobile navigation drawer.
+
+  Accepts:
+  - menu: Shopify link list
+  - section: owning header section
+{% endcomment %}
+
+{%- liquid
+  assign show_twitter = false
+  assign show_facebook = false
+  assign show_instagram = false
+  assign show_tiktok = false
+  if section.settings.drawer_show_socials
+    if settings.social_twitter_link != blank
+      assign show_twitter = true
+    endif
+    if settings.social_facebook_link != blank
+      assign show_facebook = true
+    endif
+    if settings.social_instagram_link != blank
+      assign show_instagram = true
+    endif
+    if settings.social_tiktok_link != blank
+      assign show_tiktok = true
+    endif
+  endif
+  assign show_socials = false
+  if show_twitter or show_facebook or show_instagram or show_tiktok
+    assign show_socials = true
+  endif
+-%}
+
+<div
+  class="tsh-drawer"
+  :class="$store.xHeaderMenu.tshMenuOpen && 'is-open'"
+  :aria-hidden="(!$store.xHeaderMenu.tshMenuOpen).toString()"
+  :inert="!$store.xHeaderMenu.tshMenuOpen"
+>
+  <button
+    type="button"
+    class="tsh-drawer__scrim"
+    tabindex="-1"
+    aria-label="Close menu"
+    @click="$store.xHeaderMenu.closeTransparentDrawer()"
+  ></button>
+
+  <aside
+    id="tsh-drawer-{{ section.id }}"
+    class="tsh-drawer__panel{% if section.settings.drawer_full_height %} tsh-drawer__panel--full{% endif %}"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Mobile main menu"
+  >
+    <button
+      type="button"
+      class="tsh-drawer__close text-black!"
+      data-tsh-drawer-close
+      aria-label="Close menu"
+      @click="$store.xHeaderMenu.closeTransparentDrawer()"
+    >
+      <svg viewBox="0 0 18 18" aria-hidden="true">
+        <path d="M3 3l12 12M15 3 3 15" fill="none" stroke="currentColor" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <nav class="tsh-drawer__nav" aria-label="Mobile main">
+      {% render 'nav-tree',
+        variant: 'drawer',
+        linklist: menu,
+        section: section,
+        section_id: section.id
+      %}
+    </nav>
+
+    {%- if section.settings.drawer_show_login or show_socials -%}
+      <div class="tsh-drawer__footer">
+        {%- if section.settings.drawer_show_login -%}
+          <a
+            class="tsh-drawer__login"
+            href="{{ section.settings.drawer_login_url | default: routes.account_login_url }}"
+          >
+            {{ section.settings.drawer_login_label | escape }}
+          </a>
+        {%- endif -%}
+
+        {%- if show_socials -%}
+          <ul class="tsh-drawer__socials" role="list">
+            {%- if show_twitter -%}
+              <li>
+                <a href="{{ settings.social_twitter_link }}" target="_blank" rel="noopener" aria-label="Twitter">
+                  {% render 'icon-media', icon: 'icon-twitter' %}
+                </a>
+              </li>
+            {%- endif -%}
+            {%- if show_facebook -%}
+              <li>
+                <a href="{{ settings.social_facebook_link }}" target="_blank" rel="noopener" aria-label="Facebook">
+                  {% render 'icon-media', icon: 'icon-facebook' %}
+                </a>
+              </li>
+            {%- endif -%}
+            {%- if show_instagram -%}
+              <li>
+                <a href="{{ settings.social_instagram_link }}" target="_blank" rel="noopener" aria-label="Instagram">
+                  {% render 'icon-media', icon: 'icon-instagram' %}
+                </a>
+              </li>
+            {%- endif -%}
+            {%- if show_tiktok -%}
+              <li>
+                <a href="{{ settings.social_tiktok_link }}" target="_blank" rel="noopener" aria-label="TikTok">
+                  {% render 'icon-media', icon: 'icon-tiktok' %}
+                </a>
+              </li>
+            {%- endif -%}
+          </ul>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </aside>
+</div>
