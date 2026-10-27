@@ -1,3 +1,19 @@
+{%- liquid
+  assign totesavvy_layout = false
+  if section.settings.layout_style == 'totesavvy'
+    assign totesavvy_layout = true
+  endif
+
+  assign totesavvy_show = true
+  if section.settings.enable == false or section.settings.show_only_on_homepage and template.name != "index"
+    assign totesavvy_show = false
+  endif
+-%}
+{%- if totesavvy_layout -%}
+  {%- if totesavvy_show -%}
+    {% render 'announcement-bar-totesavvy', section: section %}
+  {%- endif -%}
+{%- else -%}
 {% style %}
   @media (min-width: 1024px) {
     .announcement-bar-toolbar #localization_form button {
@@ -166,7 +182,8 @@
           <div id="x-slide-announcement-bar" class="disable-effect-hover grow flex-1 x-splide splide{% if section.settings.enable_carousel_on_desktop and section.blocks.size > 1 %} cursor-grab lg:pl-12 lg:pr-12{% else %} has-toolbar:lg:pr-5 has-toolbar:lg:pl-5{% endif %} overflow-hidden visible relative{% if settings.lang_direction contains request.locale.iso_code %} rtl{% endif %}"
             {%- if section.blocks.size > 1 -%}
               x-intersect.once='$store.xSplide.load($el, {
-                "type": "loop",
+                "type": "fade",
+                "rewind": true,
                 "speed": 1000,
                 "pagination": false,
                 "interval": {{ section.settings.change_bar_every | times: 1000 }},
@@ -526,8 +543,9 @@
           toolbar_location: 'announcement_bar'
         %}
       </div>
-    {%- endif -%} 
+    {%- endif -%}
   </div>
+{%- endif -%}
 {%- endif -%}
 {% schema %}
 {
@@ -538,6 +556,244 @@
     {
       "type": "paragraph",
       "content": "t:sections.user_guide_link.header.announcement_bar"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "layout_style",
+      "label": "Bar layout",
+      "info": "The ToteSavvy bar is fixed to the top of the window, fades between messages and has no arrows or countdown.",
+      "options": [
+        {
+          "value": "legacy",
+          "label": "Classic (carousel, toolbar, menu)"
+        },
+        {
+          "value": "totesavvy",
+          "label": "ToteSavvy fixed bar"
+        }
+      ],
+      "default": "legacy"
+    },
+    {
+      "type": "header",
+      "content": "ToteSavvy bar appearance",
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "color",
+      "id": "bar_bg_color",
+      "label": "Bar background",
+      "default": "#262626",
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "color",
+      "id": "bar_text_color",
+      "label": "Bar text and icons",
+      "default": "#FFFFFF",
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "range",
+      "id": "bar_height",
+      "min": 28,
+      "max": 72,
+      "step": 2,
+      "unit": "px",
+      "label": "Bar height",
+      "default": 40,
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "range",
+      "id": "bar_height_mobile",
+      "min": 24,
+      "max": 64,
+      "step": 2,
+      "unit": "px",
+      "label": "Bar height (mobile)",
+      "default": 40,
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "range",
+      "id": "bar_font_size",
+      "min": 10,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Message font size",
+      "default": 14,
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "range",
+      "id": "bar_font_size_mobile",
+      "min": 9,
+      "max": 18,
+      "step": 1,
+      "unit": "px",
+      "label": "Message font size (mobile)",
+      "default": 12,
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "select",
+      "id": "bar_font_weight",
+      "label": "Message font weight",
+      "options": [
+        {
+          "value": "400",
+          "label": "Regular"
+        },
+        {
+          "value": "500",
+          "label": "Medium"
+        },
+        {
+          "value": "600",
+          "label": "Semibold"
+        },
+        {
+          "value": "700",
+          "label": "Bold"
+        }
+      ],
+      "default": "700",
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "range",
+      "id": "bar_letter_spacing",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "unit": "%",
+      "label": "Message letter spacing",
+      "default": 1,
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "range",
+      "id": "bar_padding_inline",
+      "min": 8,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "label": "Side padding",
+      "default": 30,
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "range",
+      "id": "bar_padding_inline_mobile",
+      "min": 8,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "label": "Side padding (mobile)",
+      "default": 16,
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "range",
+      "id": "fade_duration",
+      "min": 100,
+      "max": 1500,
+      "step": 50,
+      "unit": "ms",
+      "label": "Message fade duration",
+      "default": 600,
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "header",
+      "content": "ToteSavvy bar social icons",
+      "info": "Shown on the right on desktop. Leave a link empty to hide that icon; empty links fall back to the matching link in Theme settings.",
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_social_mobile",
+      "label": "Show social icons on mobile",
+      "default": false,
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "url",
+      "id": "social_instagram_url",
+      "label": "Instagram link",
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "url",
+      "id": "social_pinterest_url",
+      "label": "Pinterest link",
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "url",
+      "id": "social_youtube_url",
+      "label": "YouTube link",
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "url",
+      "id": "social_tiktok_url",
+      "label": "TikTok link",
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "range",
+      "id": "social_icon_size",
+      "min": 16,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "label": "Icon circle size",
+      "default": 26,
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "range",
+      "id": "social_glyph_size",
+      "min": 8,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Icon glyph size",
+      "default": 13,
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "range",
+      "id": "social_icon_gap",
+      "min": 4,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Icon spacing",
+      "default": 10,
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "range",
+      "id": "social_border_opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "label": "Icon circle opacity",
+      "default": 55,
+      "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
+    },
+    {
+      "type": "header",
+      "content": "General"
     },
     {
       "type": "checkbox",
@@ -1076,6 +1332,13 @@
           "type": "url",
           "id": "link",
           "label": "t:sections.announcement-bar.blocks.announcement.link.label"
+        },
+        {
+          "type": "text",
+          "id": "link_label",
+          "label": "Underlined words",
+          "info": "ToteSavvy bar only. The part of the text above to underline and link, for example: travel essentials",
+          "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
         },
         {
           "type": "checkbox",
@@ -2029,6 +2292,13 @@
           "type": "url",
           "id": "link",
           "label": "t:sections.announcement-bar.blocks.announcement.link.label"
+        },
+        {
+          "type": "text",
+          "id": "link_label",
+          "label": "Underlined words",
+          "info": "ToteSavvy bar only. The part of the text above to underline and link, for example: travel essentials",
+          "visible_if": "{{ section.settings.layout_style == 'totesavvy' }}"
         },
         {
           "type": "checkbox",
