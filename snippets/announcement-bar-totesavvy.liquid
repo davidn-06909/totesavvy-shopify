@@ -1,0 +1,171 @@
+{% comment %}
+  ToteSavvy announcement bar.
+
+  Fixed to the viewport top so it never scrolls away; the sticky header docks
+  directly beneath it via the global --tsa-announcement-height custom property.
+  Messages cross-fade on a timer (no arrows, no countdown) and the hard-coded
+  social icons sit at the right on desktop only.
+
+  Accepts:
+  - section: the owning announcement-bar section
+{% endcomment %}
+
+{%- liquid
+  assign message_count = 0
+  for block in section.blocks
+    assign block_text = block.settings.text | remove: '{count_down}' | strip
+    if block_text != blank
+      assign message_count = message_count | plus: 1
+    endif
+  endfor
+
+  assign interval = section.settings.change_bar_every | times: 1000
+  if section.settings.auto_switch_bar == false
+    assign interval = 0
+  endif
+
+  assign text_color = section.settings.bar_text_color
+  assign border_alpha = section.settings.social_border_opacity | divided_by: 100.0
+
+  assign instagram_url = section.settings.social_instagram_url | default: settings.social_instagram_link
+  assign pinterest_url = section.settings.social_pinterest_url | default: settings.social_pinterest_link
+  assign youtube_url = section.settings.social_youtube_url | default: settings.social_youtube_link
+  assign tiktok_url = section.settings.social_tiktok_url | default: settings.social_tiktok_link
+
+  assign has_social = false
+  if instagram_url != blank or pinterest_url != blank or youtube_url != blank or tiktok_url != blank
+    assign has_social = true
+  endif
+-%}
+
+{%- style -%}
+  :root {
+    --tsa-announcement-height: {{ section.settings.bar_height }}px;
+  }
+  @media (max-width: 767px) {
+    :root {
+      --tsa-announcement-height: {{ section.settings.bar_height_mobile }}px;
+    }
+  }
+  /* Relative + z-index so theme.js can still lower the bar behind the cart
+     drawer (it sets an inline z-index on .section-announcement). */
+  #shopify-section-{{ section.id }} {
+    position: relative;
+    z-index: 55;
+    --tsa-ab-bg: {{ section.settings.bar_bg_color }};
+    --tsa-ab-text: {{ text_color }};
+    --tsa-ab-font-size: {{ section.settings.bar_font_size }}px;
+    --tsa-ab-font-weight: {{ section.settings.bar_font_weight }};
+    --tsa-ab-letter-spacing: {{ section.settings.bar_letter_spacing | divided_by: 100.0 }}em;
+    --tsa-ab-padding-inline: {{ section.settings.bar_padding_inline }}px;
+    --tsa-ab-fade: {{ section.settings.fade_duration }}ms;
+    --tsa-ab-social-size: {{ section.settings.social_icon_size }}px;
+    --tsa-ab-social-glyph: {{ section.settings.social_glyph_size }}px;
+    --tsa-ab-social-gap: {{ section.settings.social_icon_gap }}px;
+    --tsa-ab-social-border: rgba({{ text_color.red }}, {{ text_color.green }}, {{ text_color.blue }}, {{ border_alpha }});
+  }
+  @media (max-width: 767px) {
+    #shopify-section-{{ section.id }} {
+      --tsa-ab-font-size: {{ section.settings.bar_font_size_mobile }}px;
+      --tsa-ab-padding-inline: {{ section.settings.bar_padding_inline_mobile }}px;
+    }
+  }
+{%- endstyle -%}
+
+<div class="tsa-announcement{% if section.settings.show_social_mobile %} tsa-announcement--social-mobile{% endif %}">
+  <div class="tsa-announcement__inner">
+    {%- if message_count > 0 -%}
+      <div
+        class="tsa-announcement__messages"
+        x-data="{
+          current: 0,
+          count: {{ message_count }},
+          interval: {{ interval }},
+          timer: null,
+          init() { this.start() },
+          start() {
+            if (this.count < 2 || this.interval < 1 || this.timer) return;
+            this.timer = setInterval(() => { this.current = (this.current + 1) % this.count }, this.interval);
+          },
+          stop() { clearInterval(this.timer); this.timer = null },
+          destroy() { this.stop() }
+        }"
+        @mouseenter="stop()"
+        @mouseleave="start()"
+      >
+        {%- assign message_index = 0 -%}
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign message_text = block.settings.text | remove: '{count_down}' | strip
+            if message_text == blank
+              continue
+            endif
+            assign label = block.settings.link_label | strip
+            assign new_window = ''
+            if block.settings.open_new_window
+              assign new_window = ' target="_blank" rel="noopener"'
+            endif
+          -%}
+          <p
+            class="tsa-announcement__message{% if message_index == 0 %} is-active{% endif %}"
+            :class="{ 'is-active': current === {{ message_index }} }"
+            aria-hidden="{% if message_index == 0 %}false{% else %}true{% endif %}"
+            :aria-hidden="(current !== {{ message_index }}).toString()"
+            {{ block.shopify_attributes }}
+          >
+            {%- if label != blank and message_text contains label -%}
+              {%- assign parts = message_text | split: label -%}
+              {{- parts[0] | escape -}}
+              {%- if block.settings.link != blank -%}
+                <a class="tsa-announcement__link" href="{{ block.settings.link }}"{{ new_window }}>{{ label | escape }}</a>
+              {%- else -%}
+                <span class="tsa-announcement__link">{{ label | escape }}</span>
+              {%- endif -%}
+              {{- parts[1] | escape -}}
+            {%- elsif block.settings.link != blank -%}
+              <a class="tsa-announcement__link" href="{{ block.settings.link }}"{{ new_window }}>{{ message_text | escape }}</a>
+            {%- else -%}
+              {{- message_text | escape -}}
+            {%- endif -%}
+          </p>
+          {%- assign message_index = message_index | plus: 1 -%}
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+
+    {%- if section.settings.show_social_icons and has_social -%}
+      <ul class="tsa-announcement__social" role="list">
+        {%- if instagram_url != blank -%}
+          <li>
+            <a class="tsa-announcement__social-link" href="{{ instagram_url }}" target="_blank" rel="noopener" aria-label="{{ 'general.social.links.instagram' | t }}">
+              {%- render 'icon-media', icon: 'icon-instagram' -%}
+            </a>
+          </li>
+        {%- endif -%}
+        {%- if pinterest_url != blank -%}
+          <li>
+            <a class="tsa-announcement__social-link" href="{{ pinterest_url }}" target="_blank" rel="noopener" aria-label="{{ 'general.social.links.pinterest' | t }}">
+              {%- render 'icon-media', icon: 'icon-pinterest' -%}
+            </a>
+          </li>
+        {%- endif -%}
+        {%- if youtube_url != blank -%}
+          <li>
+            <a class="tsa-announcement__social-link" href="{{ youtube_url }}" target="_blank" rel="noopener" aria-label="{{ 'general.social.links.youtube' | t }}">
+              {%- render 'icon-media', icon: 'icon-youtube' -%}
+            </a>
+          </li>
+        {%- endif -%}
+        {%- if tiktok_url != blank -%}
+          <li>
+            <a class="tsa-announcement__social-link" href="{{ tiktok_url }}" target="_blank" rel="noopener" aria-label="{{ 'general.social.links.tiktok' | t }}">
+              {%- render 'icon-media', icon: 'icon-tiktok' -%}
+            </a>
+          </li>
+        {%- endif -%}
+      </ul>
+    {%- endif -%}
+  </div>
+</div>
+
+<div class="tsa-announcement-spacer" aria-hidden="true"></div>

@@ -39,3 +39,134 @@
     max-width: unset;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * ToteSavvy announcement bar — fixed to the viewport top, cross-fading
+ * messages, social icons on the right. Every value below comes from a section
+ * setting; the custom properties are emitted by
+ * snippets/announcement-bar-totesavvy.liquid.
+ * ------------------------------------------------------------------------- */
+.tsa-announcement {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 1;
+  height: var(--tsa-announcement-height);
+  width: 100%;
+  color: var(--tsa-ab-text);
+  background: var(--tsa-ab-bg);
+}
+
+/* Reserves the flow space the fixed bar vacates, so the page starts below it. */
+.tsa-announcement-spacer {
+  height: var(--tsa-announcement-height);
+}
+
+.tsa-announcement__inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding-inline: var(--tsa-ab-padding-inline);
+}
+
+/* Grid stacks every message in the same cell so the fade has no layout shift. */
+.tsa-announcement__messages {
+  display: grid;
+  max-width: 100%;
+  text-align: center;
+}
+
+.tsa-announcement__message {
+  grid-area: 1 / 1;
+  margin: 0;
+  font-size: var(--tsa-ab-font-size);
+  font-weight: var(--tsa-ab-font-weight);
+  line-height: 1.15;
+  letter-spacing: var(--tsa-ab-letter-spacing);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--tsa-ab-fade) ease-in-out,
+    visibility 0s linear var(--tsa-ab-fade);
+}
+
+.tsa-announcement__message.is-active {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--tsa-ab-fade) ease-in-out,
+    visibility 0s linear;
+}
+
+.tsa-announcement__link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: opacity 150ms ease-out;
+}
+
+a.tsa-announcement__link:hover {
+  opacity: 0.75;
+}
+
+.tsa-announcement__link:focus-visible,
+.tsa-announcement__social-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.tsa-announcement__social {
+  position: absolute;
+  top: 50%;
+  right: var(--tsa-ab-padding-inline);
+  display: flex;
+  align-items: center;
+  gap: var(--tsa-ab-social-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform: translateY(-50%);
+}
+
+.tsa-announcement__social-link {
+  display: grid;
+  place-items: center;
+  width: var(--tsa-ab-social-size);
+  height: var(--tsa-ab-social-size);
+  color: inherit;
+  border: 1px solid var(--tsa-ab-social-border);
+  border-radius: 50%;
+  transition: opacity 150ms ease-out;
+}
+
+.tsa-announcement__social-link:hover {
+  opacity: 0.7;
+}
+
+.tsa-announcement__social-link svg {
+  width: var(--tsa-ab-social-glyph);
+  height: var(--tsa-ab-social-glyph);
+}
+
+@media (max-width: 767px) {
+  .tsa-announcement:not(.tsa-announcement--social-mobile) .tsa-announcement__social {
+    display: none;
+  }
+  .tsa-announcement__message {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tsa-announcement__message,
+  .tsa-announcement__message.is-active {
+    transition: none;
+  }
+}
