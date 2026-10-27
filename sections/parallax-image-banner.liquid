@@ -1,0 +1,409 @@
+{%- liquid
+  assign desktop_image = section.settings.image | default: section.settings.mobile_image
+  assign mobile_image = section.settings.mobile_image | default: desktop_image
+
+  assign desktop_image_position = 'center'
+  if desktop_image != blank
+    assign desktop_image_position = desktop_image.presentation.focal_point
+  endif
+
+  assign mobile_image_position = desktop_image_position
+  if mobile_image != blank
+    assign mobile_image_position = mobile_image.presentation.focal_point
+  endif
+
+  assign content_align_items = 'center'
+  case section.settings.content_alignment
+    when 'left'
+      assign content_align_items = 'flex-start'
+    when 'right'
+      assign content_align_items = 'flex-end'
+  endcase
+
+  assign parallax_disabled = settings.disable_parallax_effect
+  unless section.settings.enable_parallax
+    assign parallax_disabled = true
+  endunless
+
+  assign image_loading = 'lazy'
+  assign image_fetchpriority = 'auto'
+  if section.index <= 2
+    assign image_loading = 'eager'
+    assign image_fetchpriority = 'high'
+  endif
+
+  assign overlay_opacity = section.settings.overlay_opacity | divided_by: 100.0
+-%}
+
+{%- style -%}
+  #ParallaxImageBanner-{{ section.id }} {
+    --pib-height-desktop: {{ section.settings.height_desktop }}px;
+    --pib-height-mobile: {{ section.settings.height_mobile }}px;
+    --pib-image-position-desktop: {{ desktop_image_position }};
+    --pib-image-position-mobile: {{ mobile_image_position }};
+    --pib-overlay-color: {{ section.settings.overlay_color }};
+    --pib-overlay-opacity: {{ overlay_opacity }};
+    --pib-content-align: {{ section.settings.content_alignment }};
+    --pib-content-align-items: {{ content_align_items }};
+    --pib-content-max-width: {{ section.settings.content_max_width }}px;
+    --pib-title-color: {{ section.settings.title_color }};
+    --pib-title-size-desktop: {{ section.settings.title_size_desktop }}px;
+    --pib-title-size-mobile: {{ section.settings.title_size_mobile }}px;
+    --pib-title-weight: {{ section.settings.title_font_weight }};
+    --pib-subtitle-color: {{ section.settings.subtitle_color }};
+    --pib-subtitle-size-desktop: {{ section.settings.subtitle_size_desktop }}px;
+    --pib-subtitle-size-mobile: {{ section.settings.subtitle_size_mobile }}px;
+    --pib-subtitle-weight: {{ section.settings.subtitle_font_weight }};
+    --height-parallax: {% if parallax_disabled %}100%{% else %}110%{% endif %};
+  }
+{%- endstyle -%}
+
+<section
+  id="ParallaxImageBanner-{{ section.id }}"
+  class="pib"
+  data-content-alignment="{{ section.settings.content_alignment }}"
+  data-parallax-enabled="{% if parallax_disabled %}false{% else %}true{% endif %}"
+>
+  <div class="pib__media" aria-hidden="true">
+    {%- if desktop_image != blank -%}
+      <parallax-image class="pib__parallax-image">
+        <parallax-movement
+          class="pib__movement"
+          x-data="xParallax"
+          x-intersect.once.margin.200px="load({{ parallax_disabled }})"
+        >
+          <picture>
+            {%- if section.settings.mobile_image != blank -%}
+              <source
+                media="(max-width: 767px)"
+                srcset="
+                  {{ mobile_image | image_url: width: 375 }} 375w,
+                  {{ mobile_image | image_url: width: 550 }} 550w,
+                  {{ mobile_image | image_url: width: 750 }} 750w,
+                  {{ mobile_image | image_url: width: 900 }} 900w,
+                  {{ mobile_image | image_url: width: 1100 }} 1100w,
+                  {{ mobile_image | image_url: width: 1500 }} 1500w
+                "
+                sizes="100vw"
+              >
+            {%- endif -%}
+            <img
+              class="pib__image"
+              src="{{ desktop_image | image_url: width: 2000 }}"
+              srcset="
+                {{ desktop_image | image_url: width: 750 }} 750w,
+                {{ desktop_image | image_url: width: 1100 }} 1100w,
+                {{ desktop_image | image_url: width: 1500 }} 1500w,
+                {{ desktop_image | image_url: width: 2000 }} 2000w,
+                {{ desktop_image | image_url: width: 2600 }} 2600w,
+                {{ desktop_image | image_url: width: 3200 }} 3200w,
+                {{ desktop_image | image_url: width: 3840 }} 3840w
+              "
+              sizes="100vw"
+              width="{{ desktop_image.width }}"
+              height="{{ desktop_image.height }}"
+              alt=""
+              loading="{{ image_loading }}"
+              fetchpriority="{{ image_fetchpriority }}"
+              decoding="async"
+            >
+          </picture>
+        </parallax-movement>
+      </parallax-image>
+    {%- else -%}
+      <div class="pib__placeholder" aria-hidden="true">
+        {{ 'lifestyle-1' | placeholder_svg_tag }}
+      </div>
+    {%- endif -%}
+  </div>
+
+  <div class="pib__overlay" aria-hidden="true"></div>
+
+  {%- if section.settings.title != blank or section.settings.subtitle != blank -%}
+    <div class="pib__content">
+      {%- if section.settings.title != blank -%}
+        <{{ section.settings.heading_tag }} class="pib__title">
+          {{ section.settings.title | escape }}
+        </{{ section.settings.heading_tag }}>
+      {%- endif -%}
+
+      {%- if section.settings.subtitle != blank -%}
+        <p class="pib__subtitle">{{ section.settings.subtitle | escape }}</p>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+</section>
+
+{% schema %}
+{
+  "name": "Parallax image banner",
+  "tag": "section",
+  "class": "section-parallax-image-banner",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer",
+      "aside"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Media"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Desktop background image"
+    },
+    {
+      "type": "image_picker",
+      "id": "mobile_image",
+      "label": "Mobile background image",
+      "info": "Uses the desktop image when left blank."
+    },
+    {
+      "type": "range",
+      "id": "height_desktop",
+      "min": 250,
+      "max": 900,
+      "step": 10,
+      "unit": "px",
+      "label": "Desktop height",
+      "default": 450
+    },
+    {
+      "type": "range",
+      "id": "height_mobile",
+      "min": 300,
+      "max": 800,
+      "step": 10,
+      "unit": "px",
+      "label": "Mobile height",
+      "default": 500
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "Overlay color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 80,
+      "step": 1,
+      "unit": "%",
+      "label": "Overlay opacity",
+      "default": 20
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_parallax",
+      "label": "Enable parallax effect",
+      "info": "The global animation preference can disable this effect.",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "YOUR BAG, BUT SMARTER"
+    },
+    {
+      "type": "select",
+      "id": "heading_tag",
+      "label": "Title heading tag",
+      "options": [
+        {
+          "value": "h1",
+          "label": "H1"
+        },
+        {
+          "value": "h2",
+          "label": "H2"
+        },
+        {
+          "value": "h3",
+          "label": "H3"
+        },
+        {
+          "value": "h4",
+          "label": "H4"
+        }
+      ],
+      "default": "h2"
+    },
+    {
+      "type": "textarea",
+      "id": "subtitle",
+      "label": "Subtitle",
+      "default": "We get it — you've got taste. That's why ToteSavvy was designed to work with your existing bag collection, not against it. No matter what bag you carry, ToteSavvy gives you the pockets, structure, and functionality you've been yearning for."
+    },
+    {
+      "type": "select",
+      "id": "content_alignment",
+      "label": "Content alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "content_max_width",
+      "min": 320,
+      "max": 1600,
+      "step": 20,
+      "unit": "px",
+      "label": "Content maximum width",
+      "default": 1320
+    },
+    {
+      "type": "header",
+      "content": "Title typography"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "range",
+      "id": "title_size_desktop",
+      "min": 20,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "Desktop title size",
+      "default": 58
+    },
+    {
+      "type": "range",
+      "id": "title_size_mobile",
+      "min": 16,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "label": "Mobile title size",
+      "default": 28
+    },
+    {
+      "type": "select",
+      "id": "title_font_weight",
+      "label": "Title font weight",
+      "options": [
+        {
+          "value": "300",
+          "label": "Light"
+        },
+        {
+          "value": "400",
+          "label": "Regular"
+        },
+        {
+          "value": "500",
+          "label": "Medium"
+        },
+        {
+          "value": "600",
+          "label": "Semi bold"
+        },
+        {
+          "value": "700",
+          "label": "Bold"
+        },
+        {
+          "value": "800",
+          "label": "Extra bold"
+        }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "header",
+      "content": "Subtitle typography"
+    },
+    {
+      "type": "color",
+      "id": "subtitle_color",
+      "label": "Subtitle color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "range",
+      "id": "subtitle_size_desktop",
+      "min": 10,
+      "max": 36,
+      "step": 1,
+      "unit": "px",
+      "label": "Desktop subtitle size",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "subtitle_size_mobile",
+      "min": 10,
+      "max": 36,
+      "step": 1,
+      "unit": "px",
+      "label": "Mobile subtitle size",
+      "default": 18
+    },
+    {
+      "type": "select",
+      "id": "subtitle_font_weight",
+      "label": "Subtitle font weight",
+      "options": [
+        {
+          "value": "300",
+          "label": "Light"
+        },
+        {
+          "value": "400",
+          "label": "Regular"
+        },
+        {
+          "value": "500",
+          "label": "Medium"
+        },
+        {
+          "value": "600",
+          "label": "Semi bold"
+        },
+        {
+          "value": "700",
+          "label": "Bold"
+        },
+        {
+          "value": "800",
+          "label": "Extra bold"
+        }
+      ],
+      "default": "600"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Parallax image banner"
+    }
+  ]
+}
+{% endschema %}

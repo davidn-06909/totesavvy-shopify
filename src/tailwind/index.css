@@ -125,5 +125,6 @@
 @import "./components/collection-page.css";
 @import "./components/app-review-options.css";
 @import "./components/app-wishlist-options.css";
+@import "./components/parallax-image-banner.css";
 
 [x-cloak] { display: none !important; }
