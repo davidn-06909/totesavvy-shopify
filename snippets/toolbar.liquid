@@ -16,7 +16,7 @@
   assign show_selectors = false  
   assign currency_selector = false
   assign locale_selector = false
-  if show_currency_selector and shop.enabled_currencies.size > 1
+  if show_currency_selector and localization.available_countries.size > 1
     assign currency_selector = true
   endif
   if show_language_selector and shop.enabled_locales.size > 1 
@@ -48,7 +48,8 @@
         logo_above: logo_above, 
         show_social: show_social_icons,
         mobile: mobile,
-        menu_drawer: menu_drawer
+        menu_drawer: menu_drawer,
+        selector_id_suffix: selector_id_suffix
       -%}
     {%- endif -%}
   </div>

@@ -11,50 +11,91 @@
   else
     assign loading = 'eager'
   endif
+
+  assign configured_social_links = settings.social_twitter_link
+  assign configured_social_links = configured_social_links | append: settings.social_facebook_link
+  assign configured_social_links = configured_social_links | append: settings.social_pinterest_link
+  assign configured_social_links = configured_social_links | append: settings.social_instagram_link
+  assign configured_social_links = configured_social_links | append: settings.social_tiktok_link
+  assign configured_social_links = configured_social_links | append: settings.social_tumblr_link
+  assign configured_social_links = configured_social_links | append: settings.social_snapchat_link
+  assign configured_social_links = configured_social_links | append: settings.social_youtube_link
+  assign configured_social_links = configured_social_links | append: settings.social_vimeo_link
+  assign configured_social_links = configured_social_links | append: settings.social_linkedin_link
+  assign configured_social_links = configured_social_links | append: settings.social_line_link
+  assign configured_social_links = configured_social_links | append: settings.email_address
+  assign configured_social_links = configured_social_links | append: settings.phone_number
+  assign has_social_links = false
+  if configured_social_links != blank
+    assign has_social_links = true
+  endif
 %}
-{% style %}
-  #section-footer {
-    contain: style layout;
-  }
-  .section-padding-{{ section.id }} {
-    padding-top: {{ section.settings.top_padding_mobile }}px;
-    padding-bottom: {{ section.settings.bottom_padding_mobile }}px;
-  }
-  @media (min-width: 768px) { 
-    .section-padding-{{ section.id }} {
-      padding-top: {{ section.settings.top_padding }}px;
-      padding-bottom: {{ section.settings.bottom_padding }}px;
-    }
-  }
-{% endstyle %}
-<div id="section-footer" class="section-footer relative background-footer sticky-footer selection:bg-[rgba(var(--colors-text-footer),0.2)] section-padding-{{ section.id }}">
-  {%- if section.settings.show_social_icons -%}
-    <div class="flex items-center">
-      {% render 'toolbar', show_social_icons: section.settings.show_social_icons %}
-    </div>
-  {%- endif -%}
-  {%- if section.blocks.size > 0 or section.settings.newsletter_enable or section.settings.show_social or section.settings.enable_follow_on_shop -%}
-    <div class="flex-wrap md:mb-5 md:border-b md:border-b-solid md:pt-12 md:pb-7">
+<footer
+  id="section-footer"
+  class="footer-root section-footer relative sticky-footer selection:bg-[rgba(var(--colors-text-footer),0.2)]"
+  style="
+    --footer-background: {{ section.settings.footer_background | default: '#F0EAE4' }};
+    --footer-heading-color: {{ section.settings.footer_heading_color | default: '#B08B5A' }};
+    --footer-text-color: {{ section.settings.footer_text_color | default: '#2E2A26' }};
+    --footer-muted-text-color: {{ section.settings.footer_muted_text_color | default: '#5A554F' }};
+    --footer-border-color: {{ section.settings.footer_border_color | default: '#2E2A26' }};
+    --footer-dropdown-background: {{ section.settings.dropdown_background | default: '#F0EAE4' }};
+    --footer-padding-top: {{ section.settings.padding_top | default: 64 }}px;
+    --footer-padding-bottom: {{ section.settings.padding_bottom | default: 40 }}px;
+    --footer-padding-top-mobile: {{ section.settings.padding_top_mobile | default: 48 }}px;
+    --footer-padding-bottom-mobile: {{ section.settings.padding_bottom_mobile | default: 32 }}px;
+    --footer-side-padding-desktop: {{ section.settings.side_padding_desktop | default: 64 }}px;
+    --footer-side-padding-tablet: {{ section.settings.side_padding_tablet | default: 40 }}px;
+    --footer-side-padding-mobile: {{ section.settings.side_padding_mobile | default: 24 }}px;
+    --footer-column-gap-desktop: {{ section.settings.column_gap_desktop | default: 0 }}px;
+    --footer-column-row-gap: {{ section.settings.column_row_gap | default: 48 }}px;
+    --footer-heading-margin-bottom: {{ section.settings.heading_margin_bottom | default: 16 }}px;
+    --footer-link-row-gap: {{ section.settings.link_row_gap | default: 5 }}px;
+    --footer-bottom-bar-gap: {{ section.settings.bottom_bar_gap | default: 88 }}px;
+    --footer-bottom-bar-gap-mobile: {{ section.settings.bottom_bar_gap_mobile | default: 48 }}px;
+    --footer-bottom-stack-gap-mobile: {{ section.settings.bottom_stack_gap_mobile | default: 32 }}px;
+    --footer-copyright-gap: {{ section.settings.copyright_gap | default: 16 }}px;
+    --footer-copyright-gap-mobile: {{ section.settings.copyright_gap_mobile | default: 24 }}px;
+    --footer-mobile-text-align: {{ section.settings.mobile_text_align | default: 'center' }};
+    --footer-mobile-flex-align: {% if section.settings.mobile_text_align == 'left' %}flex-start{% else %}center{% endif %};
+    --footer-heading-font-size: {{ section.settings.heading_font_size | default: 15 }}px;
+    --footer-heading-letter-spacing: {{ section.settings.heading_letter_spacing | default: 1.5 }}px;
+    --footer-heading-uppercase: {% if section.settings.heading_uppercase == false %}none{% else %}uppercase{% endif %};
+    --footer-link-font-size: {{ section.settings.link_font_size | default: 15 }}px;
+    --footer-link-line-height: {{ section.settings.link_line_height | default: 1.4 }};
+    --footer-copyright-font-size: {{ section.settings.copyright_font_size | default: 13 }}px;
+    --footer-social-icon-size: {{ section.settings.social_icon_size | default: 20 }}px;
+    --footer-social-icon-gap: {{ section.settings.social_icon_gap | default: 28 }}px;
+    --footer-social-row-margin-top: {{ section.settings.social_row_margin_top | default: 16 }}px;
+    --footer-currency-min-width: {{ section.settings.currency_min_width | default: 152 }}px;
+    --footer-currency-height: {{ section.settings.currency_height | default: 41 }}px;
+    --footer-currency-border-width: {{ section.settings.currency_border_width | default: 1 }}px;
+    --footer-currency-border-radius: {{ section.settings.currency_border_radius | default: 4 }}px;
+    --footer-currency-font-size: {{ section.settings.currency_font_size | default: 15 }}px;
+    --footer-currency-padding-x: {{ section.settings.currency_padding_x | default: 12 }}px;
+    --footer-dropdown-max-height: {{ section.settings.dropdown_max_height | default: 245 }}px;
+    --footer-dropdown-offset: {{ section.settings.dropdown_offset | default: 6 }}px;
+    --footer-dropdown-item-padding-y: {{ section.settings.dropdown_item_padding_y | default: 6 }}px;
+    --footer-show-payment-icons: {% if section.settings.payment_enable %}1{% else %}0{% endif %};
+    --footer-payment-icon-width: {{ section.settings.payment_icon_width | default: 55 }}px;
+    --footer-payment-icon-height: {{ section.settings.payment_icon_height | default: 40 }}px;
+    --footer-payment-icon-gap: {{ section.settings.payment_icon_gap | default: 6 }}px;
+    --footer-payment-icon-row-gap: {{ section.settings.payment_icon_row_gap | default: 8 }}px;
+    --footer-column-count: {{ section.blocks.size | at_least: 1 }};
+  "
+>
+  <div class="footer-inner">
       {%- if section.blocks.size > 0 -%}
-        {% liquid
-          assign number_col_footer = section.settings.columns_desktop
-        %}
-        <div class="pt-6 md:pt-0 md:flex justify-center md:mt-auto md:mb-auto md:mr-auto md:ml-auto md:pr-0 rtl:md:pr-5 rtl:md:pl-0 x-pgw page-width flex-wrap">
+        <div class="footer-columns">
           {%- for block in section.blocks -%}
-            {% liquid
-              assign number = forloop.index | modulo: number_col_footer
-            %}
-            <div class="footer-col--{{ forloop.index }} md:pr-5 rtl:md:pr-0 md:first:pl-0 rtl:md:pl-5 rtl:md:first:pr-0 md:mb-7{% if number == 1 %}{% if is_rtl %} md:pr-0{% else %} md:pl-0{% endif %}{% else %} md:pl-10 rtl:md:pl-0 rtl:md:pr-10{% endif %} w-full md:w-1/{{ section.settings.columns_desktop }} {{ class_rtl }}" {{ block.shopify_attributes }}>
+            <div class="footer-column footer-col--{{ forloop.index }} {{ class_rtl }}" {{ block.shopify_attributes }}>
               {%- case block.type -%}
                 {%- when 'text' -%}
-                  <div x-data="{ open: {{ block.settings.open_by_default }} }" class="pt-4 pb-4 border-b border-b-solid md:border-none">
+                  <div class="footer-main__block">
                     {%- if block.settings.heading_text != blank -%}
-                      <div @click="open = ! open" class="relative pr-5 rtl:pr-0 rtl:pl-5 cursor-pointer md:cursor-default duration-200 transition">
-                        <p class="h6 text-[115%]">{{ block.settings.heading_text | escape }}</p>
-                        {% unless block.settings.open_by_default %}
-                          <span class="md:hidden absolute w-2.5	h-2.5 top-1/2 -translate-y-1/2 duration-500 flex right-3.5 rtl:right-auto rtl:left-3.5" :class="open ? 'rotate-180' : ''">{% render 'icon-alls', icon: 'icon-caret' %}</span>
-                        {% endunless %}
-                      </div>
+                      <h2 class="column-heading" id="footer-heading-{{ section.id }}-{{ block.id }}">
+                        {{ block.settings.heading_text | escape }}
+                      </h2>
                     {%- endif -%}
                     {%- if block.settings.image != blank -%}
                       {%- capture sizes -%}
@@ -69,7 +110,11 @@
                     {%- endif -%}
                     {% capture text_block_content %}
                       {%- if block.settings.image != blank -%}
-                        <{%- if block.settings.link_image_footer != blank -%}a href="{{ block.settings.link_image_footer }}"{% if block.settings.open_new_window %} target="_blank"{% endif %}{% else %}div{% endif %} class="image-{{ block.id }} h-full inline-block overflow-hidden{% if block.settings.heading_text != blank %} mt-6{% endif %}{% if settings.edges_type == 'rounded_corners' %} rounded-[10px]{% endif %}">
+                        {%- if block.settings.link_image_footer != blank -%}
+                          <a href="{{ block.settings.link_image_footer }}"{% if block.settings.open_new_window %} target="_blank"{% endif %} class="image-{{ block.id }} h-full inline-block overflow-hidden{% if block.settings.heading_text != blank %} mt-6{% endif %}{% if settings.edges_type == 'rounded_corners' %} rounded-[10px]{% endif %}">
+                        {%- else -%}
+                          <div class="image-{{ block.id }} h-full inline-block overflow-hidden{% if block.settings.heading_text != blank %} mt-6{% endif %}{% if settings.edges_type == 'rounded_corners' %} rounded-[10px]{% endif %}">
+                        {%- endif -%}
                           {{ block.settings.image | image_url: width: block.settings.image.width | image_tag: widths: image_tags,
                             height: block.settings.image.height,
                             class: "image-hover",
@@ -78,56 +123,55 @@
                             loading: loading,
                             alt: block.settings.image.alt | escape
                           }}
-                        </{%- if block.settings.link_image_footer != blank -%}a{% else %}div{% endif %}>
+                        {%- if block.settings.link_image_footer != blank -%}
+                          </a>
+                        {%- else -%}
+                          </div>
+                        {%- endif -%}
                       {%- endif -%}
-                      <div class="rte{% if block.settings.image != blank %} mt-2{% else %} mt-6{% endif %}">{{ block.settings.subtext }}</div>
-                      {%- if block.settings.show_social_icons -%}
-                        <div class="mt-2">
+                      {%- if block.settings.subtext != blank -%}
+                        <div class="rte{% if block.settings.image != blank %} mt-2{% else %} mt-6{% endif %}">{{ block.settings.subtext }}</div>
+                      {%- endif -%}
+                      {%- if block.settings.show_social_icons and has_social_links -%}
+                        <div class="social-row">
                           {% render 'toolbar', enable_footer: true, show_social_icons: block.settings.show_social_icons, social_icons_layout: block.settings.icon_layout %}
                         </div>
                       {%- endif -%}
                     {% endcapture %}
-                    <div class="hidden md:block">
-                      {{ text_block_content }}
-                    </div>
-                    <div class="md:hidden"{% if block.settings.heading_text != blank %} x-show="open" x-collapse x-cloak {%- endif %}>
+                    <div class="footer-main__block-content">
                       {{ text_block_content }}
                     </div>
                   </div>
                 {%- when 'link_list' -%}
-                  <div x-data="{ open: {{ block.settings.open_by_default }} }" class="pt-4 pb-4 border-b md:border-none">
+                  <div class="footer-main__block">
                     {%- if block.settings.heading_menu != blank -%}
-                      <div @click="open = ! open" class="relative pr-5 rtl:pr-0 rtl:pl-5 cursor-pointer md:cursor-default duration-200 transition">
-                        <p class="h6 text-[115%]">{{- block.settings.heading_menu | escape -}}</p>
-                        <span class="md:hidden absolute w-2.5	h-2.5 top-1/2 -translate-y-1/2 duration-500 flex right-3.5 rtl:right-auto rtl:left-3.5" :class="open ? 'rotate-180' : ''">{% render 'icon-alls', icon: 'icon-caret' %}</span>
-                      </div>
+                      <h2 class="column-heading" id="footer-heading-{{ section.id }}-{{ block.id }}">
+                        {{- block.settings.heading_menu | escape -}}
+                      </h2>
                     {%- endif -%}
-                    {%- if block.settings.menu != blank -%}
-                      {% capture menu_block_content %}
+                    {%- if block.settings.menu != blank and block.settings.menu.links.size > 0 -%}
+                      <ul
+                        class="column-links"
+                        role="list"
+                        {% if block.settings.heading_menu != blank %}
+                          aria-labelledby="footer-heading-{{ section.id }}-{{ block.id }}"
+                        {% endif %}
+                      >
                         {%- for link in block.settings.menu.links -%}
-                          <li class="mb-1 {% if forloop.index == 1 %}mt-6 md:mt-0{% endif %} first:pt-0 pt-2">
-                            <a href="{{ link.url }}" class="hover-text-link nav-link relative block lg:inline-block">
-                              {{ link.title }}
-                            </a>
+                          <li>
+                            <a href="{{ link.url }}">{{ link.title }}</a>
                           </li>
                         {%- endfor -%}
-                        {%- if block.settings.show_social_icons -%}
-                          <div class="mt-2">
-                            {% render 'toolbar', enable_footer: true, show_social_icons: block.settings.show_social_icons %}
-                          </div>
-                        {%- endif -%}
-                      {% endcapture %}
-                      <ul class="mt-6 hidden md:block">
-                        {{ menu_block_content }}
                       </ul>
-                      <ul class="md:hidden"{% if block.settings.heading_menu != blank %} x-show="open" x-collapse x-cloak{% endif %}>
-                        {{ menu_block_content }}
-                      </ul>
+                    {%- endif -%}
+                    {%- if block.settings.show_social_icons and has_social_links -%}
+                      <div class="social-row">
+                        {% render 'toolbar', enable_footer: true, show_social_icons: block.settings.show_social_icons %}
+                      </div>
                     {%- endif -%}
                   </div>
                 {%- when 'image' -%}
-                  <div class="pt-4 pb-4 flex flex-col justify-start text-{{ block.settings.alignment }} text-{{ block.settings.alignment }} rtl:text-{% if block.settings.alignment == 'center' %}center{% elsif block.settings.alignment == 'left' %}right{% else %}left{% endif -%}
-                    {%- if number == 1 %} md:pr-0{% endif -%}
+                  <div class="footer-main__block pt-4 pb-4 flex flex-col justify-start text-{{ block.settings.alignment }} rtl:text-{% if block.settings.alignment == 'center' %}center{% elsif block.settings.alignment == 'left' %}right{% else %}left{% endif -%}
                     {%- if block.settings.alignment == 'center' %} items-center{% elsif block.settings.alignment == 'right' %} items-end{% endif %}"
                   >
                     {%- if block.settings.image != blank -%}
@@ -146,7 +190,11 @@
                           assign class_image = 'image hover dark:hidden'
                         endif
                       %}
-                      <{%- if block.settings.link_image_footer != blank -%}a href="{{ block.settings.link_image_footer }}"{% if block.settings.open_new_window %} target="_blank"{% endif %}{% else %}div{% endif %} class="image-{{ block.id }} h-full inline-block overflow-hidden{% if block.settings.rounded_corner_image %} rounded-[10px]{% endif %}">
+                      {%- if block.settings.link_image_footer != blank -%}
+                        <a href="{{ block.settings.link_image_footer }}"{% if block.settings.open_new_window %} target="_blank"{% endif %} class="image-{{ block.id }} h-full inline-block overflow-hidden{% if block.settings.rounded_corner_image %} rounded-[10px]{% endif %}">
+                      {%- else -%}
+                        <div class="image-{{ block.id }} h-full inline-block overflow-hidden{% if block.settings.rounded_corner_image %} rounded-[10px]{% endif %}">
+                      {%- endif -%}
                         {{ block.settings.image | image_url: width: block.settings.image.width | image_tag: widths: image_tags,
                           height: 'auto',
                           class: class_image,
@@ -165,7 +213,11 @@
                             alt: block.settings.image_dark.alt | escape
                           }}
                         {% endif %}
-                      </{%- if block.settings.link_image_footer != blank -%}a{% else %}div{% endif %}>
+                      {%- if block.settings.link_image_footer != blank -%}
+                        </a>
+                      {%- else -%}
+                        </div>
+                      {%- endif -%}
                     {%- else -%}
                       {% liquid
                         assign class_img = 'max-w-[13rem] bg-neutral-200'
@@ -188,66 +240,11 @@
                     {% endif %}
                   </div>
                 {%- when 'email_footer' -%}
-                  <div x-data="{ open: {{ block.settings.open_by_default }} }" class="pt-4 md:pb-5">
-                    <div @click="open = ! open" class="relative pr-5 rtl:pr-0 rtl:pl-5 cursor-pointer md:cursor-default duration-200 transition">
-                      <p class="h6 text-[115%]">{{ block.settings.heading_email | escape }}</p>
-                      <span class="md:hidden absolute w-2.5	h-2.5 top-1/2 -translate-y-1/2 duration-500 flex right-3.5 rtl:right-auto rtl:left-3.5" :class="open ? 'rotate-180' : ''">{% render 'icon-alls', icon: 'icon-caret' %}</span>
-                    </div>
-                    <div class="hidden md:block">
-                      {%- form 'customer', id: 'ContactFooter', class: 'footer__newsletter newsletter-form mb-5' -%}
-                        <input type="hidden" aria-hidden="true" name="contact[tags]" value="newsletter">
-                        <div class="mt-4 flex">
-                          <div class="relative w-full">
-                            <input
-                              id="NewsletterFormDesktop--{{ section.id }}"
-                              type="email"
-                              name="contact[email]"
-                              aria-label="Email"
-                              class="w-full h-full pl-2.5 pr-4 pt-5 input border-b-2 border-current rounded-none border-b-solid focus:outline-none focus:border-current bg-transparent placeholder:opacity-0"
-                              aria-required="true"
-                              autocorrect="off"
-                              autocapitalize="off"
-                              autocomplete="email"
-                              {% if form.errors %}
-                                autofocus
-                                aria-invalid="true"
-                                aria-describedby="ContactFooter-error"
-                              {% elsif form.posted_successfully? %}
-                                aria-describedby="ContactFooter-success"
-                              {% endif %}
-                                placeholder="{{ 'newsletter.label' | t }}"
-                                required>
-                            <label class="absolute top-1/2 left-2.5 rtl:left-auto rtl:right-2.5 -translate-y-1/2 input_focus:text-xs input_focus:top-2.5 input_not_empty:top-2.5 input_not_empty:text-xs" for="NewsletterFormDesktop--{{ section.id }}">
-                              {{ 'newsletter.label' | t }}
-                            </label>
-                          </div>
-                          <div>
-                            <button type="submit" class="rounded-none border-solid border-current ml-1 w-12 h-full flex justify-center items-center bg-transparent border-b-2 border-b-solid border-x-0 border-t-0" name="commit" aria-label="{{ 'newsletter.button_label' | t }}">
-                              <span class="rtl:rotate-180">{% render 'icon-alls', icon: 'icon-arrow', enable_email_footer: true %}</span>
-                            </button>
-                          </div>
-                          {%- if form.errors -%}
-                            <div class="flex items-center text-left pl-4 pr-4 pt-3 pb-3 mt-4 bg-[rgba(var(--color-error),0.1)] selection:bg-[rgba(var(--color-error),0.2)]{% if settings.edges_type == 'rounded_corners' %} rounded-md{% endif %}" id="Newsletter-error--{{ section.id }}">
-                              <span class="inline-block w-6 mr-2 text-[rgba(var(--color-error))]">{% render 'icon-alls', icon: 'icon-error' %} </span>
-                              <p class="flex-1">{{ form.errors.translated_fields['email'] | capitalize }} {{ form.errors.messages['email'] }}</p>
-                            </div>
-                          {%- endif -%}
-                        </div>
-                        {%- if form.posted_successfully? -%}
-                          <div class="flex items-center text-left pt-3 pb-3 pl-3 pr-3 mt-4 bg-[rgba(var(--color-success),0.1)] selection:bg-[rgba(var(--color-success),0.2)] focus:shadown-none focus-visible:outline-none focus:outline-none focus-visible:shadow-none" id="Newsletter-success--{{ section.id }}" tabindex="-1" autofocus>
-                            <span class="inline-block w-6 mr-2 text-[rgba(var(--color-success))]">{% render 'icon-alls', icon: 'icon-success' %}</span>
-                            <p class="flex-1">{{ 'newsletter.success' | t }}</p>
-                          </div>
-                        {%- endif -%}
-                      {%- endform -%}
-                      {% if block.settings.subtext_email != blank %}
-                        <div class="rte">{{ block.settings.subtext_email }}</div>
-                      {% endif %}
-                      {%- if block.settings.show_social_icons -%}
-                        <div class="mt-4">{% render 'toolbar', enable_footer: true, show_social_icons: block.settings.show_social_icons %}</div>
-                      {%- endif -%}  
-                    </div>
-                    <div class="md:hidden" x-show="open" x-collapse x-cloak>
+                  <div class="footer-main__block pt-4 pb-4">
+                    <h2 class="column-heading" id="footer-heading-{{ section.id }}-{{ block.id }}">
+                      {{ block.settings.heading_email | escape }}
+                    </h2>
+                    <div class="footer-main__block-content">
                       {%- form 'customer', id: 'ContactFooter', class: 'footer__newsletter newsletter-form mb-5' -%}
                         <input type="hidden" aria-hidden="true" name="contact[tags]" value="newsletter">
                         <div class="mt-4 flex">
@@ -256,6 +253,7 @@
                               id="NewsletterForm--{{ section.id }}"
                               type="email"
                               name="contact[email]"
+                              aria-label="Email"
                               class="w-full h-full pl-2.5 pr-4 pt-5 input border-b-2 border-current rounded-none border-b-solid focus:outline-none focus:border-current bg-transparent placeholder:opacity-0"
                               aria-required="true"
                               autocorrect="off"
@@ -296,18 +294,17 @@
                       {% if block.settings.subtext_email != blank %}
                         <div class="rte">{{ block.settings.subtext_email }}</div>
                       {% endif %}
-                      {%- if block.settings.show_social_icons -%}
-                        <div class="mt-4">{% render 'toolbar', enable_footer: true, show_social_icons: block.settings.show_social_icons %}</div>
+                      {%- if block.settings.show_social_icons and has_social_links -%}
+                      <div class="social-row">{% render 'toolbar', enable_footer: true, show_social_icons: block.settings.show_social_icons %}</div>
                       {%- endif -%}  
                     </div>
                   </div>
                 {% when 'contact' %}
-                  <div x-data="{ open: {{ block.settings.open_by_default }} }" class="pt-4 pb-4 border-b md:border-none">
+                  <div class="footer-main__block">
                     {%- if block.settings.heading_menu != blank -%}
-                      <div @click="open = ! open" class="relative pr-5 rtl:pr-0 rtl:pl-5 cursor-pointer md:cursor-default duration-200 transition">
-                        <p class="h6 text-[115%]">{{- block.settings.heading_menu | escape -}}</p>
-                        <span class="md:hidden absolute w-2.5	h-2.5 top-1/2 -translate-y-1/2 duration-500 flex right-3.5 rtl:right-auto rtl:left-3.5" :class="open ? 'rotate-180' : ''">{% render 'icon-alls', icon: 'icon-caret' %}</span>
-                      </div>
+                      <h2 class="column-heading" id="footer-heading-{{ section.id }}-{{ block.id }}">
+                        {{- block.settings.heading_menu | escape -}}
+                      </h2>
                     {%- endif -%}
                     {% capture contact_block_content %}
                       {% if block.settings.icon_1 != 'none' or block.settings.title_1 or block.settings.text_1 %}
@@ -416,14 +413,11 @@
                         </div>
                       {% endif %}
                     {% endcapture %}
-                    <div class="mt-6 hidden md:block">
+                    <div class="footer-main__block-content mt-6">
                       {{ contact_block_content }}
                     </div>
-                    <div class="mt-6 md:hidden" x-show="open" x-collapse x-cloak>
-                      {{ contact_block_content }}
-                    </div>
-                    {%- if block.settings.show_social_icons -%}
-                      <div class="mt-4 md:mt-6 pb-1">
+                    {%- if block.settings.show_social_icons and has_social_links -%}
+                      <div class="social-row">
                         {% render 'toolbar', enable_footer: true, show_social_icons: block.settings.show_social_icons %}
                       </div>
                     {%- endif -%}
@@ -433,8 +427,88 @@
           {%- endfor -%}
         </div>
       {%- endif -%}
-    </div>
-  {%- endif -%}
+      {% liquid
+        assign show_currency_block = false
+        if section.settings.show_currency_selector and localization.available_countries.size > 0
+          assign show_currency_block = true
+        endif
+
+        assign payment_types_source = section.settings.custom_payment | strip
+        if payment_types_source == blank
+          assign payment_types_source = shop.enabled_payment_types | join: ','
+        endif
+        if payment_types_source == blank
+          assign payment_types_source = 'amazon,american_express,apple_pay,diners_club,discover,google_pay,master,shopify_pay,visa,paypal'
+        endif
+
+        assign payment_types_source = payment_types_source | downcase | remove: ' '
+        assign payment_types_source = payment_types_source | replace: 'mastercard', 'master'
+        assign payment_types_source = payment_types_source | replace: 'amex', 'american_express'
+        assign payment_types_source = payment_types_source | replace: 'shop_pay', 'shopify_pay'
+        assign enabled_payment_types = payment_types_source | split: ','
+      %}
+      {%- capture payment_icons_html -%}
+        {%- for type in enabled_payment_types -%}
+          {%- capture payment_icon -%}{{ type | payment_type_svg_tag }}{%- endcapture -%}
+          {%- if payment_icon != blank -%}
+            <li aria-hidden="true">{{ payment_icon }}</li>
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endcapture -%}
+      {% liquid
+        assign show_payment_block = false
+        if section.settings.payment_enable and payment_icons_html != blank
+          assign show_payment_block = true
+        endif
+      %}
+      {%- if show_currency_block or show_payment_block -%}
+        <div class="footer-bottom{% unless show_currency_block %} footer-bottom--payments-only{% endunless %}">
+          {%- if show_currency_block -%}
+            <div class="currency-block {{ class_rtl }}">
+              <div class="footer-meta__selector">
+                {%- render 'multi-selectors',
+                  currency_selector: true,
+                  locale_selector: false,
+                  enable_footer: true,
+                  selector_id_suffix: section.id
+                -%}
+              </div>
+            </div>
+          {%- endif -%}
+          {%- if show_payment_block -%}
+            <span class="sr-only" id="footer-payment-label-{{ section.id }}">Payment methods</span>
+            <ul
+              class="payment-row icon-payment"
+              role="list"
+              aria-labelledby="footer-payment-label-{{ section.id }}"
+            >
+              {{ payment_icons_html }}
+            </ul>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+      {%- if section.settings.show_copyright or section.settings.show_powered -%}
+        <div class="copyright-row{% unless show_currency_block or show_payment_block %} copyright-row--without-bottom{% endunless %} base-link p-break-words">
+          {%- if section.settings.show_copyright -%}
+            <div class="copyright-text">
+              <span>&copy; {{ 'now' | date: "%Y" }}{% unless is_rtl %}, {% endunless %}</span>
+              {{ shop.name | link_to: routes.root_url }}
+              {%- if section.settings.add_copyright_text != blank -%}
+                <div class="copyright-extra">
+                  {{ section.settings.add_copyright_text }}
+                </div>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+          {%- if section.settings.show_copyright and section.settings.show_powered -%}
+            <span class="copyright-sep" aria-hidden="true">|</span>
+          {%- endif -%}
+          {%- if section.settings.show_powered -%}
+            <div class="copyright-powered">{{ powered_by_link }}</div>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+  </div>
   {%- if shop.features.follow_on_shop? and section.settings.enable_follow_on_shop -%}
     <div class="x-pgw page-width pt-5 md:pt-3.5 md:pb-3 pb-2 change-position-popup text-center ltr
       {%- if section.settings.additional_layout == 'horizontal' %} lg:text-{{ section.settings.horizontal_position }} rtl:lg:text-{% if section.settings.horizontal_position == 'center' %}center{% elsif section.settings.horizontal_position == 'left' %}right{% else %}left{% endif -%}
@@ -444,52 +518,9 @@
       {% # theme-check-disable %}
       {{ shop | login_button: action: 'follow' }}
       {% # theme-check-enable %}
-    </div>  
-  {%- endif -%}
-  <div class="additional-footer {{ class_rtl }}{% if section.settings.additional_layout == 'horizontal' %} x-pgw page-width mr-auto ml-auto lg:flex lg:flex-row lg:justify-between items-center{% else %} mr-5 ml-5{% endif -%}"
-  >
-    <div class="{% if section.settings.additional_layout == 'horizontal' %}flex flex-col lg:flex lg:flex-row gap-x-7 items-center w-full justify-between{% else %}flex flex-col{% endif %}">
-      {%- if section.settings.show_language_selector or section.settings.show_currency_selector -%}
-        <div class="mb-3 md:mb-2{% if section.settings.additional_layout == 'vertical' %} lg:mb-2{% else %} lg:mb-0{% endif %}">
-        {% render 'toolbar', enable_footer: true, show_currency_selector: section.settings.show_currency_selector, show_language_selector: section.settings.show_language_selector %}
-        </div>
-      {%- endif -%}
-      <div class="flex flex-col items-center{% if section.settings.additional_layout == 'vertical' %} lg:mt-2 order-last{% else %} lg:mb-0 order-last md:order-none{% endif %}{% if section.settings.additional_layout == 'horizontal' %} lg:pl-14 lg:max-w-3xl{% endif %}">
-        <div class="{% if section.settings.show_copyright %}mt-4 md:mt-4 base-link text-center lg:mt-0{% unless section.settings.additional_layout == 'vertical' %} lg:text-right{% endunless %}{% endif %} p-break-words">
-          {%- if section.settings.show_copyright -%}
-            <p class="inline-block">&copy; {{ 'now' | date: "%Y" }}{% unless is_rtl %}, {% endunless %}</p>
-            {{ shop.name | link_to: routes.root_url }}.
-            {%- if section.settings.add_copyright_text != blank -%}
-              <div class="ml-1 inline-block">
-                {{ section.settings.add_copyright_text }}
-              </div>
-            {%- endif -%}
-          {%- endif -%}
-          {% if section.settings.show_powered %}
-            <p class="mt-3{% if section.settings.show_copyright %} md:mt-0{% else %} md:mt-4{% endif %} md:ml-1 block md:inline-block">{{ powered_by_link }}</p>
-          {% endif %}
-        </div>
-      </div>
-      {%- if section.settings.payment_enable -%}
-        {% liquid 
-          if section.settings.custom_payment != blank
-            assign enabled_payment_types = section.settings.custom_payment | remove: ' ' | split: ','
-          else
-            assign enabled_payment_types = shop.enabled_payment_types
-          endif
-        %}
-        {% assign enabled_payment_types = section.settings.custom_payment | remove: ' ' | split: ',' %}
-        <ul class="icon-payment flex justify-center gap-2 flex-wrap{% unless section.settings.show_language_selector or section.settings.show_currency_selector %} mt-5 md:mt-0{% endunless %}" role="list">
-          {%- for type in enabled_payment_types -%}
-            <li>
-              {{ type | payment_type_svg_tag }}
-            </li>
-          {%- endfor -%}
-        </ul>
-      {%- endif -%}
     </div>
-  </div>
-</div>
+  {%- endif -%}
+</footer>
 {% schema %}
 {
   "name": "t:sections.footer.name",
@@ -499,12 +530,6 @@
       "type": "link_list",
       "name": "t:sections.mobile-navigation.settings.menu.label",
       "settings": [
-        {
-          "type": "checkbox",
-          "id": "open_by_default",
-          "default": false,
-          "label": "t:sections.footer.blocks.open_by_default"
-        },
         {
           "type": "text",
           "id": "heading_menu",
@@ -531,12 +556,6 @@
       "type": "text",
       "name": "t:sections.footer.blocks.text.name",
       "settings": [
-        {
-          "type": "checkbox",
-          "id": "open_by_default",
-          "default": true,
-          "label": "t:sections.footer.blocks.open_by_default"
-        },
         {
           "type": "text",
           "id": "heading_text",
@@ -684,12 +703,6 @@
       "name": "t:sections.footer.blocks.email_footer.name",
       "settings": [
         {
-          "type": "checkbox",
-          "id": "open_by_default",
-          "default": true,
-          "label": "t:sections.footer.blocks.open_by_default"
-        },
-        {
           "type": "text",
           "id": "heading_email",
           "default": "Subscribe to our emails",
@@ -721,12 +734,6 @@
       "type": "contact",
       "name": "t:sections.footer.blocks.contact.name",
       "settings": [
-        {
-          "type": "checkbox",
-          "id": "open_by_default",
-          "default": false,
-          "label": "t:sections.footer.blocks.open_by_default"
-        },
         {
           "type": "text",
           "id": "heading_menu",
@@ -1879,23 +1886,8 @@
       "content": "t:sections.user_guide_link.footer.footer"
     },
     {
-      "type": "range",
-      "id": "columns_desktop",
-      "min": 2,
-      "max": 5,
-      "step": 1,
-      "default": 4,
-      "label": "t:sections.collection-list.settings.columns_desktop.label"
-    },
-    {
       "type": "header",
       "content": "t:sections.header.settings.language_currency"
-    },
-    {
-      "type": "checkbox",
-      "id": "show_language_selector",
-      "default": true,
-      "label": "t:sections.header.settings.show_language_selector.label"
     },
     {
       "type": "checkbox",
@@ -1904,32 +1896,9 @@
       "label": "t:sections.header.settings.show_currency_selector.label"
     },
     {
-      "type": "header",
-      "content": "t:sections.footer.settings.header_add_info.content"
-    },
-    {
-      "type": "checkbox",
-      "id": "show_social_icons",
-      "default": true,
-      "label": "t:sections.footer.settings.show_social_icons.label"
-    },
-    {
-      "type": "checkbox",
-      "id": "payment_enable",
-      "default": true,
-      "label": "t:sections.footer.settings.payment_enable.label"
-    },
-    {
-      "type": "text",
-      "id": "custom_payment",
-      "info": "t:sections.footer.settings.custom_payment.info",
-      "label": "t:sections.footer.settings.custom_payment.label",
-      "visible_if": "{{ section.settings.payment_enable }}"
-    },
-    {
       "type": "checkbox",
       "id": "show_copyright",
-      "default": false,
+      "default": true,
       "label": "t:sections.footer.settings.show_copyright.label"
     },
     {
@@ -1994,51 +1963,465 @@
     },
     {
       "type": "header",
-      "content": "t:sections.all.padding.section_padding_heading"
+      "content": "Colours"
     },
     {
-      "type": "range",
-      "id": "top_padding",
-      "min": 0,
-      "max": 100,
-      "step": 4,
-      "unit": "px",
-      "label": "t:sections.all.padding.padding_top",
-      "default": 80
+      "type": "color",
+      "id": "footer_background",
+      "label": "Background",
+      "default": "#F0EAE4"
     },
     {
-      "type": "range",
-      "id": "bottom_padding",
-      "min": 0,
-      "max": 100,
-      "step": 4,
-      "unit": "px",
-      "label": "t:sections.all.padding.padding_bottom",
-      "default": 40
+      "type": "color",
+      "id": "footer_heading_color",
+      "label": "Heading",
+      "info": "The gold default is low-contrast. Use #8A6A3C to reach AA.",
+      "default": "#B08B5A"
+    },
+    {
+      "type": "color",
+      "id": "footer_text_color",
+      "label": "Text",
+      "default": "#2E2A26"
+    },
+    {
+      "type": "color",
+      "id": "footer_muted_text_color",
+      "label": "Muted text",
+      "default": "#5A554F"
+    },
+    {
+      "type": "color",
+      "id": "footer_border_color",
+      "label": "Borders",
+      "default": "#2E2A26"
+    },
+    {
+      "type": "color",
+      "id": "dropdown_background",
+      "label": "Dropdown background",
+      "default": "#F0EAE4"
     },
     {
       "type": "header",
-      "content": "t:sections.all.padding.section_layout_mobile"
+      "content": "Layout & spacing"
     },
     {
       "type": "range",
-      "id": "top_padding_mobile",
+      "id": "padding_top",
       "min": 0,
-      "max": 100,
+      "max": 160,
       "step": 4,
       "unit": "px",
-      "label": "t:sections.all.padding.padding_top",
+      "label": "Top padding",
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Mobile top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Mobile bottom padding",
+      "default": 32
+    },
+    {
+      "type": "range",
+      "id": "side_padding_desktop",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Desktop side padding",
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "side_padding_tablet",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Tablet side padding",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "side_padding_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Mobile side padding",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "column_gap_desktop",
+      "min": 0,
+      "max": 64,
+      "step": 1,
+      "unit": "px",
+      "label": "Desktop column gap",
       "default": 0
     },
     {
       "type": "range",
-      "id": "bottom_padding_mobile",
+      "id": "column_row_gap",
       "min": 0,
-      "max": 100,
+      "max": 120,
       "step": 4,
       "unit": "px",
-      "label": "t:sections.all.padding.padding_bottom",
+      "label": "Column row gap",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "heading_margin_bottom",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "label": "Heading bottom margin",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "link_row_gap",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Link row gap",
+      "default": 5
+    },
+    {
+      "type": "range",
+      "id": "bottom_bar_gap",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom bar top gap",
+      "default": 88
+    },
+    {
+      "type": "range",
+      "id": "bottom_bar_gap_mobile",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Mobile bottom bar top gap",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "bottom_stack_gap_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Mobile selector and payments gap",
+      "default": 32
+    },
+    {
+      "type": "range",
+      "id": "copyright_gap",
+      "min": 0,
+      "max": 64,
+      "step": 1,
+      "unit": "px",
+      "label": "Copyright top gap",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "copyright_gap_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 1,
+      "unit": "px",
+      "label": "Mobile copyright top gap",
+      "default": 24
+    },
+    {
+      "type": "select",
+      "id": "mobile_text_align",
+      "label": "Mobile text alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "heading_font_size",
+      "min": 10,
+      "max": 30,
+      "step": 1,
+      "unit": "px",
+      "label": "Heading size",
+      "default": 15
+    },
+    {
+      "type": "range",
+      "id": "heading_letter_spacing",
+      "min": 0,
+      "max": 5,
+      "step": 0.1,
+      "unit": "px",
+      "label": "Heading letter spacing",
+      "default": 1.5
+    },
+    {
+      "type": "checkbox",
+      "id": "heading_uppercase",
+      "label": "Uppercase headings",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "link_font_size",
+      "min": 10,
+      "max": 30,
+      "step": 1,
+      "unit": "px",
+      "label": "Link size",
+      "default": 15
+    },
+    {
+      "type": "range",
+      "id": "link_line_height",
+      "min": 1,
+      "max": 2,
+      "step": 0.1,
+      "label": "Link line height",
+      "default": 1.4
+    },
+    {
+      "type": "range",
+      "id": "copyright_font_size",
+      "min": 10,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Copyright size",
+      "default": 13
+    },
+    {
+      "type": "range",
+      "id": "social_icon_size",
+      "min": 12,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "label": "Social icon size",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "social_icon_gap",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "label": "Social icon visual gap",
       "default": 28
+    },
+    {
+      "type": "range",
+      "id": "social_row_margin_top",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "label": "Social row top margin",
+      "default": 16
+    },
+    {
+      "type": "header",
+      "content": "Currency selector"
+    },
+    {
+      "type": "range",
+      "id": "currency_min_width",
+      "min": 100,
+      "max": 260,
+      "step": 4,
+      "unit": "px",
+      "label": "Minimum width",
+      "default": 152
+    },
+    {
+      "type": "range",
+      "id": "currency_height",
+      "min": 32,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "label": "Height",
+      "default": 41
+    },
+    {
+      "type": "range",
+      "id": "currency_border_width",
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "unit": "px",
+      "label": "Border width",
+      "default": 1
+    },
+    {
+      "type": "range",
+      "id": "currency_border_radius",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Border radius",
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "currency_font_size",
+      "min": 10,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Font size",
+      "default": 15
+    },
+    {
+      "type": "range",
+      "id": "currency_padding_x",
+      "min": 4,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Horizontal padding",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "dropdown_max_height",
+      "min": 120,
+      "max": 400,
+      "step": 5,
+      "unit": "px",
+      "label": "Dropdown maximum height",
+      "default": 245
+    },
+    {
+      "type": "range",
+      "id": "dropdown_offset",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Dropdown offset",
+      "default": 6
+    },
+    {
+      "type": "range",
+      "id": "dropdown_item_padding_y",
+      "min": 2,
+      "max": 16,
+      "step": 1,
+      "unit": "px",
+      "label": "Dropdown item vertical padding",
+      "default": 6
+    },
+    {
+      "type": "header",
+      "content": "Payment icons"
+    },
+    {
+      "type": "checkbox",
+      "id": "payment_enable",
+      "label": "t:sections.footer.settings.payment_enable.label",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "custom_payment",
+      "default": "amazon,american_express,apple_pay,diners_club,discover,google_pay,master,shopify_pay,visa,paypal",
+      "info": "t:sections.footer.settings.custom_payment.info",
+      "label": "t:sections.footer.settings.custom_payment.label",
+      "visible_if": "{{ section.settings.payment_enable }}"
+    },
+    {
+      "type": "range",
+      "id": "payment_icon_width",
+      "min": 30,
+      "max": 80,
+      "step": 1,
+      "unit": "px",
+      "label": "Icon width",
+      "default": 55
+    },
+    {
+      "type": "range",
+      "id": "payment_icon_height",
+      "min": 24,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "label": "Icon height",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "payment_icon_gap",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Icon gap",
+      "default": 6
+    },
+    {
+      "type": "range",
+      "id": "payment_icon_row_gap",
+      "min": 0,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Icon row gap",
+      "default": 8
     }
   ],
   "default": {
